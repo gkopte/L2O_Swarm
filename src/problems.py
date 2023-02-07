@@ -100,7 +100,7 @@ def square_cos(batch_size=128, num_dims=None,  stddev=0.01, dtype=tf.float32, mo
       x = tf.get_variable(
         "x",
         shape=[batch_size, num_dims],
-        dtype=dtype,
+        dtype=dtype, 
         initializer=tf.random_uniform_initializer(-3, 3))
       return ( tf.reduce_sum(x*x - 10*tf.math.cos(2*3.1415926*x), 1)+ 10*num_dims )
 
@@ -135,7 +135,7 @@ def square_cos(batch_size=128, num_dims=None,  stddev=0.01, dtype=tf.float32, mo
 
     #product3 = tf.reduce_sum((product - y) ** 2, 1) - tf.reduce_sum(product2, 1) + 10*num_dims
 
-
+    
     return (tf.reduce_sum((product - y) ** 2, 1)) - tf.reduce_mean(product2) + 10*num_dims
 
   return build

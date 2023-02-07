@@ -1,5 +1,6 @@
 import tensorflow as tf
 import numpy as np
+import pdb
 
 
 
@@ -25,6 +26,7 @@ def self_loss (x, fx_array, n):
 	# lambda values for controling the  balance between exploitation and exploration.
 	lam=0.001
 	
+	pdb.set_trace()
 	print (fx_array.shape)
 
 	x, x1 = tf.split(x, [n, 0], 0)

@@ -289,7 +289,7 @@ class MetaOptimizer(object):
     
     sub_x, sub_constants=_get_variables(make_loss)
     print (sub_x, sub_constants)
-#    pdb.set_trace()
+    pdb.set_trace()
 #    print(len(sub_x))
     
     def intra_init(x):
@@ -300,28 +300,12 @@ class MetaOptimizer(object):
       
       if model_path == None:
         for i in range(len(x)):
-#      fc_kernel_shape = ([20, 15680*2], [20, 20*2], [20, 200*2], [10, 10*2])
-#      fc_bias_shape = ([20, self.intra_features ], [20, self.intra_features], [20, self.intra_features], [10, self.intra_features])
-#      fc_va_shape=([1,20],[1,20],[1,20],[1,10])
-      
-#        x[i] = tf.reshape(x[i],[1,-1])
-#        print(x[i])
           fc_shape = tf.reshape(x[i],[1,-1]).get_shape()
           print(fc_shape)
-#            print(x[i])
-#            print(size)
-#            res =tf.Variable([fc_columns-1,0],trainable=False)
-#            size = size + res
-#            print(size)
           fc_kernel = np.random.rand(fc_columns, fc_shape[1]*2)
           print(fc_kernel.shape)
           fc_bias_shape = [fc_columns, self.intra_features ]
           fc_va_shape = [1,fc_columns]
-#           ker = tf.Variable(tf.random_normal(fc_shape),trainable = False)
-#           sub_ker = tf.concat([ker, ker],axis = 1)
-#           fc_kernel = tf.concat([sub_ker for i in range(fc_columns)], axis = 0)
-#           kernel_shape = tf.shape(fc_kernel)
-#           print(kernel_shape)
           sub_fc_kernel = tf.Variable(tf.random_normal(fc_kernel.shape))
 #           print(sub_fc_kernel)
           sub_fc_bias = tf.Variable(tf.random_normal(fc_bias_shape))
@@ -393,10 +377,7 @@ class MetaOptimizer(object):
     '''
     self.pre_deltas = vars_init(sub_x)
     self.pre_gradients = vars_init(sub_x)
-    
-#    x=[sub_x for i in range(self.num_lstm)]
-#    constants=[sub_constants for i in range(self.num_lstm)]
-    
+        
     
     print("x.length",len(x), x[0].shape, type(x[0]))
     #np.savetxt("xlength", x)
@@ -404,24 +385,7 @@ class MetaOptimizer(object):
     print([op.name for op in sub_x])
     print("Problem variables")
     print([op.name for op in sub_constants])
-#
-#    fc_kernel = []
-#    fc_bias = []
-#    fc_va = []
-#    fc_kernel_shape = ([20, 15680*2], [20, 20*2], [20, 200*2], [10, 10*2])
-#    fc_bias_shape = ([20, self.intra_features ], [20, self.intra_features], [20, self.intra_features], [10, self.intra_features])
-#    fc_va_shape=([1,20],[1,20],[1,20],[1,10])
-#    for i in range(4):
-#      sub_fc_kernel = tf.Variable(tf.random_normal(fc_kernel_shape[i]))
-#      sub_fc_bias = tf.Variable(tf.random_normal(fc_bias_shape[i]))
-#      sub_fc_va = tf.Variable(tf.ones(fc_va_shape[i]), trainable = False)
-#      fc_kernel.append(sub_fc_kernel)
-#      fc_bias.append(sub_fc_bias)
-#      fc_va.append(sub_fc_va)
-
-#    x_loop = x
-    # Create the optimizer networks and find the subsets of variables to assign
-    # to each optimizer.
+    
     nets, net_keys, subsets = _make_nets(sub_x, self._config, net_assignments) 
 
     # Store the networks so we can save them later.
@@ -764,6 +728,7 @@ class MetaOptimizer(object):
     x_array = tf.TensorArray(tf.float32, size=(len_unroll + 1)*self.num_lstm,
                               clear_after_read=False)
 
+    pdb.set_trace()
     _, fx_array, x_final, x_array, s_final = tf.while_loop(
         cond=lambda t, *_: t < len_unroll,
         body=time_step,

@@ -10,9 +10,11 @@ from six.moves import xrange
 import tensorflow as tf
 import numpy as np
 from tensorflow.contrib.learn.python.learn import monitored_session as ms
+from tensorflow.python import debug as tf_debug
 
 import meta
 import util
+import pdb
 
 flags = tf.flags
 logging = tf.logging
@@ -62,7 +64,10 @@ def main(_):
 
   step, update, reset, cost_op, x_final, test, fc_weights, fc_bias, fc_va= minimize
 #  saver=tf.train.Saver()
-  with ms.MonitoredSession() as sess:
+  # Creating a summary writer
+  #writer = tf.summary.FileWriter('./graphs', tf.get_default_graph())
+  hook = tf_debug.TensorBoardDebugHook("DESKTOP-TDLPICQ:6000")
+  with ms.MonitoredSession(hooks=[hook]) as sess:
     # Prevent accidental changes to the graph.
     tf.get_default_graph().finalize()
 #    Step=[step for i in range(len(cost_op))]
@@ -71,6 +76,7 @@ def main(_):
     total_cost = 0
     loss_record = []
     constants = []
+    pdb.set_trace()
     for e in xrange(FLAGS.num_epochs):
       # Training.
       time, cost, constant, Weights = util.run_epoch(sess, cost_op, [update, step], reset,
