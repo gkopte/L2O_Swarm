@@ -91,7 +91,7 @@ def indentity_init(batch_size, num_dims, stddev):
   return tf.eye(num_dims, batch_shape=[batch_size])+\
   tf.random.normal(shape=[batch_size, num_dims, num_dims], stddev=stddev)
 def square_cos(batch_size=128, num_dims=None,  stddev=0.01, dtype=tf.float32, mode='train'):
-  print (num_dims)
+  #print (num_dims)
   def build():
     """Builds loss graph."""
 
