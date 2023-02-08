@@ -45,7 +45,7 @@ def fitness_sphere(position):
  
 #particle class
 class Particle:
-  def __init__(self, sess, fitness, dim, minx, maxx, seed):
+  def __init__(self, sess, fitness, dim, minx, maxx, seed, pos=None,vel=None):
     self.rnd = random.Random(seed)
  
     # initialize position of the particle with 0.0 value
@@ -60,13 +60,20 @@ class Particle:
     # loop dim times to calculate random position and velocity
     # range of position and velocity is [minx, max]
     for i in range(dim):
-      self.position[i] = ((maxx - minx) *
-        self.rnd.random() + minx)
-      self.velocity[i] = ((maxx - minx) *
-        self.rnd.random() + minx)
+      if pos is None:
+        self.position[i] = ((maxx - minx) *
+          self.rnd.random() + minx)
+      else:
+        self.position[i] = pos[i]
+
+      if vel is None:  
+        self.velocity[i] = ((maxx - minx) *
+          self.rnd.random() + minx)
+      else:
+        self.velocity[i] = vel[i]
  
     # compute fitness of particle
-    # self.fitness = fitness(self.position) # curr fitness
+    # self.fitness = fitness(sess,self.position) # curr fitness
     print("Inital position: {}".format(self.position))
     #print(type(self.position))
     self.fitness = fitness(sess,self.position) # curr fitness
@@ -75,25 +82,38 @@ class Particle:
     # initialize best position and fitness of this particle
     self.best_part_pos = copy.copy(self.position)
     self.best_part_fitnessVal = self.fitness # best fitness
+
  
 # particle swarm optimization function
-def pso(sess,fitness, max_iter, n, dim, minx, maxx):
+def pso(sess,fitness, max_iter, n, dim, minx, maxx,pos=None,vel=None):
   # hyper parameters
   w = 0.729    # inertia
   c1 = 1.49445 # cognitive (particle)
   c2 = 1.49445 # social (swarm)
  
   rnd = random.Random(0)
- 
+  
   # create n random particles
-  swarm = [Particle(sess ,fitness, dim, minx, maxx, i) for i in range(n)]
- 
+  # swarm = [Particle(sess ,fitness, dim, minx, maxx, i, pos[i], vel[i]) for i in range(n)]
+  swarm = list()
+  for i in range(n):
+    if pos and vel:
+      swarm.append(Particle(sess ,fitness, dim, minx, maxx, i, pos[i], vel[i]))
+    else:
+      swarm.append(Particle(sess ,fitness, dim, minx, maxx, i))
+
+  
   # compute the value of best_position and best_fitness in swarm
   best_swarm_pos = [0.0 for i in range(dim)]
   best_swarm_fitnessVal = sys.float_info.max # swarm best
  
   # computer best particle of swarm and it's fitness
   for i in range(n): # check each particle
+    if pos:
+      swarm[i].position = pos[i]
+      swarm[i].fitness = fitness(sess,pos[i])
+    if vel:
+      swarm[i].velocity = vel[i]
     #print(best_swarm_fitnessVal)
     if swarm[i].fitness <best_swarm_fitnessVal:
       best_swarm_fitnessVal = swarm[i].fitness
@@ -170,8 +190,13 @@ def fitness_fn(sess,x):
 
 
 with tf.Session() as sess:
-  best_position = pso(sess,fitness_fn, max_iter, num_particles, num_dims, -3, 3)
-print(best_position)
+  # best_position = pso(sess,fitness_fn, max_iter, num_particles, num_dims, -3, 3)
+  # init_pos = [[0,0] for i in range(num_particles)]
+  # init_vel = [[0,0] for i in range(num_particles)]
+  # best_position = pso(sess,fitness_fn, max_iter, num_particles, num_dims, -3, 3,init_pos,init_vel)
+  print(fitness_fn(sess,[0,0]))
+  print(fitness_fn(sess,[0,0]))
+# print(best_position)
   
   # print(fitness_fn(problem,[1,2],batch_size=num_particles,num_dims=2))
   # Define the PSO parameter  
