@@ -25,7 +25,7 @@ def distance_matrix(x1, n1, x2, n2, dim):
 def self_loss (x, fx_array, n):
 	# lambda values for controling the  balance between exploitation and exploration.
 	lam=0.001
-	
+	print(x)
 	pdb.set_trace()
 	print (fx_array.shape)
 
@@ -124,17 +124,34 @@ def self_loss (x, fx_array, n):
 if __name__ == "__main__":
 
 	x = tf.get_variable("x", [300,128, 2], dtype=tf.float32, initializer=tf.random_normal_initializer)
+	x.assign(np.zeros((300,128, 2)))
+	
 	fx_array = tf.get_variable("y", [300, 128], dtype=tf.float32, initializer=tf.random_normal_initializer)
+	fx_array.assign(np.zeros((300, 128)))
 
-	loss, t1, t2 = self_loss(x, fx_array, 300)
-
-	print (loss.shape)
-
+	# loss, t1, t2 = self_loss(x, fx_array, 300)
+	loss = self_loss(x, fx_array, 300)
+	print(loss)
 	with tf.Session() as sess:
+		
 
+		
+		sess.run(tf.global_variables_initializer())
+		print (loss.shape)
+		# print(sess.run(loss))
+		
 		for i in range(20):
-			sess.run(tf.global_variables_initializer())
+			# sess.run(tf.global_variables_initializer())
+			if i == 10:
+				x.assign(np.ones((300,128, 2)))
+				fx_array.assign(np.ones((300, 128)))
+				loss = self_loss(x, fx_array, 300)
+
+				
+			print(sess.run(loss))
+
+			# print()
 			#tt1 = sess.run(t1)
 			#tt2 = sess.run(t2)
 			#print (np.max(tt1), np.min(tt2))
-			print (sess.run(t2))
+			#print (sess.run(t2))
