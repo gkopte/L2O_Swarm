@@ -20,7 +20,7 @@ flags = tf.flags
 logging = tf.logging
 
 FLAGS = flags.FLAGS
-flags.DEFINE_string("problem", "simple", "Type of problem.")
+#flags.DEFINE_string("problem", "simple", "Type of problem.")
  
  
 # -------fitness functions---------
@@ -45,7 +45,7 @@ def fitness_sphere(position):
  
 #particle class
 class Particle:
-  def __init__(self, sess, fitness, problem,dim, minx, maxx, seed, pos=None,vel=None):
+  def __init__(self, sess, fitness, problem, x,dim, minx, maxx, seed, pos=None,vel=None):
     self.rnd = random.Random(seed)
  
     # initialize position of the particle with 0.0 value
@@ -76,7 +76,7 @@ class Particle:
     # self.fitness = fitness(sess,self.position) # curr fitness
     print("Inital position: {}".format(self.position))
     #print(type(self.position))
-    self.fitness = fitness(sess,problem,self.position) # curr fitness
+    self.fitness = fitness(sess,problem,x,self.position) # curr fitness
     print("Initial fitness: {}".format(self.fitness))
  
     # initialize best position and fitness of this particle
@@ -85,7 +85,7 @@ class Particle:
 
  
 # particle swarm optimization function
-def pso(sess,fitness,problem, max_iter, n, dim, minx, maxx,pos=None,vel=None):
+def pso(sess,fitness,problem, x, max_iter, n, dim, minx, maxx,pos=None,vel=None):
   # hyper parameters
   w = 0.729    # inertia
   c1 = 1.49445 # cognitive (particle)
@@ -96,11 +96,13 @@ def pso(sess,fitness,problem, max_iter, n, dim, minx, maxx,pos=None,vel=None):
   # create n random particles
   # swarm = [Particle(sess ,fitness, dim, minx, maxx, i, pos[i], vel[i]) for i in range(n)]
   swarm = list()
+  #print("pos len: {}".format(len(pos)))
+
   for i in range(n):
     if pos and vel:
-      swarm.append(Particle(sess ,fitness, problem,dim, minx, maxx, i, pos[i], vel[i]))
+      swarm.append(Particle(sess ,fitness, problem,x,dim, minx, maxx, i, pos[i], vel[i]))
     else:
-      swarm.append(Particle(sess ,fitness,problem, dim, minx, maxx, i))
+      swarm.append(Particle(sess ,fitness,problem, x, dim, minx, maxx, i))
 
   
   # compute the value of best_position and best_fitness in swarm
@@ -111,7 +113,7 @@ def pso(sess,fitness,problem, max_iter, n, dim, minx, maxx,pos=None,vel=None):
   for i in range(n): # check each particle
     if pos:
       swarm[i].position = pos[i]
-      swarm[i].fitness = fitness(sess,problem,pos[i])
+      swarm[i].fitness = fitness(sess,problem,x,pos[i])
     if vel:
       swarm[i].velocity = vel[i]
     #print(best_swarm_fitnessVal)
@@ -156,7 +158,7 @@ def pso(sess,fitness,problem, max_iter, n, dim, minx, maxx,pos=None,vel=None):
    
       # compute fitness of new position
       #print(swarm[i].fitness)
-      swarm[i].fitness = fitness(sess,problem,swarm[i].position)
+      swarm[i].fitness = fitness(sess,problem, x,swarm[i].position)
  
       # is new position a new best for the particle?
       if swarm[i].fitness <swarm[i].best_part_fitnessVal:
@@ -179,12 +181,14 @@ num_particles = 10
 max_iter = 100
 tolerance = 1e-5
 
-def fitness_fn(sess, problem, x_val):
-  x_val = np.array(x_val,dtype=np.float32).reshape(1, -1)
+def fitness_fn(sess, problem, x,x_val):
+  #print("x shape: {}".format(x.shape))
+  x_val = np.array(x_val,dtype=np.float32).reshape(1,-1)
+  #print("x_val shape: {}".format(x_val.shape))
   sess.run(x.assign(x_val))
   #print(sess.run(x))
   result = sess.run(problem)
-  return result.reshape(-1, 1).astype(np.float32)
+  return result.reshape(1, -1).astype(np.float32)
 
 if __name__ == '__main__':
   with tf.Session() as sess:
@@ -193,12 +197,8 @@ if __name__ == '__main__':
       x = tf.get_variable("x",shape=[1, 2],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
       w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
       y = tf.get_variable("y",shape=[1, 2],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
+      wcos = tf.get_variable("wcos",shape=[1, 2],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
       
-      wcos = tf.get_variable("wcos",
-                          shape=[1, 2],
-                          dtype=np.float32,
-                          initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),
-                          trainable=False)
       sess.run(tf.global_variables_initializer())
       problem = problems.square_cos(batch_size=1, num_dims=2, mode='train')()
     
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     # best_position = pso(sess,fitness_fn, max_iter, num_particles, num_dims, -3, 3)
     init_pos = [[i-1,i+1] for i in range(num_particles)]
     init_vel = [[0,0] for i in range(num_particles)]
-    best_position, swarm = pso(sess, fitness_fn,problem, max_iter, num_particles, num_dims, -3, 3,init_pos,init_vel)
+    best_position, swarm = pso(sess, fitness_fn,problem, x,max_iter, num_particles, num_dims, -3, 3,init_pos,init_vel)
 
   print(best_position)
   print([part.position for part in swarm])
