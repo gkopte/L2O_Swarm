@@ -123,7 +123,7 @@ def pso(sess,fitness,problem, x, max_iter, n, dim, minx, maxx,pos=None,vel=None)
  
   # main loop of pso
   Iter = 0
-  while Iter <max_iter:
+  while (Iter < max_iter) and (best_swarm_fitnessVal > 0.0001):
      
     # after every 10 iterations
     # print iteration number and best fitness value so far

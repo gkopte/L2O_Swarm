@@ -139,7 +139,7 @@ def self_loss (x, fx_array, n):
 				problem = problems.square_cos(batch_size=1, num_dims=problem_dim, mode='test')()
 
 				# init_pos = [[i-1,i+1] for i in range(x.shape[1])]
-				#print("x shape:", x.shape)
+				print("x shape:", x.shape)
 				#print("x_val shape:", x_val.shape)
 
 				first_instance = tf.slice(x, [0, 0, 0], [1, n,problem_dim])
@@ -152,7 +152,8 @@ def self_loss (x, fx_array, n):
 
 				init_pos = IL_sess.run(first_instance).tolist()
 				print("init_pos", init_pos)
-				init_vel = np.zeros(shape=(10,2)).tolist()
+				print("n :",n)
+				init_vel = np.zeros(shape=(n,problem_dim)).tolist()
 				# init_vel = [np.zeros(x.shape[1:]).tolist() for i in range(n)]
 				print("init_vel", init_vel)
 				best_position, swarm = PSO.pso(IL_sess, PSO.fitness_fn,problem, x_val,batch_size, n, problem_dim, -3, 3,init_pos,init_vel)
