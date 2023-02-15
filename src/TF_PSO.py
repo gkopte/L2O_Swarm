@@ -7,24 +7,24 @@ import tensorflow as tf
 import problems
 
 # Construção do grafo
-def build_PSO_graph(fitness, better_particle, gbest, x, i):
+def build_PSO_graph():
     # Definição dos hyperparâmetros
     swarm_size = 10
     num_dims = 2
     stddev = 0.01
     dtype = tf.float32
-    mode = 'train'
+    mode = 'test'
     
-    i = tf.constant(0)
     # Inicialização das partículas
     x = tf.get_variable(
         "x",
         shape=[swarm_size, num_dims],
         dtype=dtype,
-        initializer=tf.random_uniform_initializer(-3, 3))
+        initializer=tf.random_uniform_initializer(-3, 3),
+        trainable=True)
         
     # Construção da função de fitness
-    # fitness = problems.square_cos(batch_size, num_dims, stddev, dtype, mode)()
+    fitness = problems.square_cos(swarm_size, num_dims, stddev, dtype, mode)()
     
     # Definição dos placeholders e da operação de otimização
     better_particle = tf.get_variable(
@@ -100,43 +100,26 @@ def build_PSO_graph(fitness, better_particle, gbest, x, i):
 
     global_best = tf.reduce_min(fitness)
     gbest = tf.where(fitness == global_best, x, gbest)
-    i = i + 1
 
-    return better_particle, gbest, x, i
+    return better_particle, gbest, x
 
     # def loop_body(i, count):
     #     return i + 1, count + 1
 
-fitness = problems.square_cos(10, 2, 0.01, tf.float32, 'train')()
+# fitness = problems.square_cos(10, 2, 0.01, tf.float32, 'test')()
 
-with tf.variable_scope("square_cos", reuse=tf.AUTO_REUSE):
-    i = tf.constant(0)
-    better_particle = tf.get_variable(
-        "best_particle",
-        shape=[2],
-        dtype=tf.float32,
-        initializer=tf.zeros_initializer(),
-        trainable=True)
-
-    gbest = tf.get_variable(
-        "global_best_particle",
-        shape=[10, 2],
-        dtype=tf.float32,
-        initializer=tf.zeros_initializer(),
-        trainable=True)
-
-    x = tf.get_variable(
-        "x",
-        shape=[10, 2],
-        dtype=tf.float32,
-        initializer=tf.random_uniform_initializer(-3, 3))
-    n = 30
-    result = tf.while_loop(lambda fitness, better_particle, gbest, x, i: i < n, build_PSO_graph, [fitness, better_particle, gbest, x, i])
+for i in range(10):
+    result = build_PSO_graph()
 
 
-    with tf.Session() as sess:
-        out = sess.run(result)
-        print(out[4])
+# i = 0
+# while_condition = lambda fitness,x,i: tf.less(i, 10)
+# result = tf.while_loop(while_condition , build_PSO_graph, [fitness,x,i])
+
+
+with tf.Session() as sess:
+    out = sess.run(result)
+    print(out[3])
 
 
 
