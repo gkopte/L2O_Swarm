@@ -65,9 +65,9 @@ def main(_):
   step, update, reset, cost_op, x_final, test, fc_weights, fc_bias, fc_va= minimize
 #  saver=tf.train.Saver()
   # Creating a summary writer
-  #writer = tf.summary.FileWriter('./graphs', tf.get_default_graph())
-  hook = tf_debug.TensorBoardDebugHook("DESKTOP-TDLPICQ:6000")
-  with ms.MonitoredSession(hooks=[hook]) as sess:
+  writer = tf.summary.FileWriter('./graphs', tf.get_default_graph())
+  #hook = tf_debug.TensorBoardDebugHook("DESKTOP-TDLPICQ:6000")
+  with ms.MonitoredSession() as sess:
     # Prevent accidental changes to the graph.
     tf.get_default_graph().finalize()
 #    Step=[step for i in range(len(cost_op))]

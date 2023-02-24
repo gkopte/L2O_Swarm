@@ -4,17 +4,20 @@ tf.enable_eager_execution()
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import pdb
 
 
 np.random.seed(123)
 tf.random.set_random_seed(123)
 # tf.random.set_random_seed(123)
 
+debug_mode = False
+
 class pso:
     def __init__(
         self,
         fitness_fn,
-        pop_size=100,
+        pop_size=10,
         dim=2,
         n_iter=200,
         b=0.9,
@@ -77,7 +80,12 @@ class pso:
         """
         f_x = self.fitness_fn(self.x)
         self.fit_history.append(tf.reduce_mean(f_x).numpy())
-        self.p = tf.where(f_x < self.f_p, self.x, self.p)
+        if debug_mode is True:
+            pdb.set_trace()
+        f_x_tiled = tf.tile(f_x, [1, self.dim])
+        f_p_tiled = tf.tile(self.f_p, [1, self.dim])
+        
+        self.p = tf.where(f_x_tiled < f_p_tiled, self.x, self.p)
         self.f_p = tf.where(f_x < self.f_p, f_x, self.f_p)
 
     def update_g_best(self):
@@ -107,17 +115,25 @@ class pso:
 def objective_function(X):
     return tf.math.sqrt(X[:,0]**2 + X[:,1]**2)[:,None]
 
+def rastrigin_function(X, dim=2):
+    A = 10
+    return A * dim + tf.reduce_sum(tf.square(X) - A * tf.cos(2 * np.pi * X), axis=1, keepdims=True)
+
 def fitness_function():
     def f(X):
         return objective_function(X)
     return f
 
-opt = pso(fitness_fn=fitness_function(), n_iter=1)
+opt = pso(fitness_fn=fitness_function(),pop_size=10, dim=2, n_iter=128)
+opt.train()
 
-print(opt.x)
+
+print(opt.g)
+print(opt.f_p)
+print(opt.fit_history)
 ## Define the grid for future plotting:
-xlist = np.linspace(-1.0, 1.0, 100)
-ylist = np.linspace(-1.0, 1.0, 100)
+xlist = np.linspace(-1.0, 1.0, 10)
+ylist = np.linspace(-1.0, 1.0, 10)
 X, Y = np.meshgrid(xlist, ylist)
 Z = - np.sqrt(X**2 + Y**2)
 

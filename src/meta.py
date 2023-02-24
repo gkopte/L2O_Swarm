@@ -17,6 +17,7 @@ import numpy as np
 from tensorflow.python.framework import ops
 from tensorflow.python.util import nest
 
+
 import networks
 import pickle
 import pdb
@@ -544,37 +545,7 @@ class MetaOptimizer(object):
         print(gradient)
         gradient = tf.reshape(gradient, tf.shape(grad))
         print(gradient)
-#        gradient = tf.reshape(gradient, reshape[i])
-#        intra_fc_bias = tf.concat([fc_bias for i in range(self.num_lstm)], axis = 1)
-#        sub_x = tf.reshape(x, [1,-1])
-#        sub_x_min = tf.reshape(x_min, [1,-1])
-#        sub_ht = tf.unstack(ht, axis = 0)
-#        x_res = tf.unstack((x - x_min) ,axis = 0)
-#        gradients = []
-#        for j in range(self.num_lstm):
-#          intra_feature = tf.concat([sub_grad[j], momentum[j], x_res[j]],axis=0)
-#          print(intra_feature)
-#          intra_feature = tf.reshape(intra_feature, [self.intra_features, -1])
-#          print(intra_feature)
-#          ht_concat = tf.concat([sub_ht[j] for i in range(self.intra_features)],axis = 0)
-#          print(ht_concat)
-#          ht_concat = tf.reshape(ht_concat, [self.intra_features, -1])
-#          print(ht_concat)
-##          grad_concat = tf.concat([sub_grad,sub_ht],axis=1)            
-##          moment_concat = tf.concat([sub_moment,sub_ht],axis=1)
-##          x_res_concat = tf.concat([x_res,sub_ht],axis=1)
-##          intra_concat = tf.concat([grad_concat,moment_concat,x_res_concat],axis=0)
-#          intra_concat = tf.concat([intra_feature, ht_concat], axis = 1)
-#          print(intra_concat)
-##        intra_concat = tf.transpose(intra_concat)
-#          intra_fc=tf.tanh(tf.matmul(fc_kernel,tf.transpose(intra_concat)) + fc_bias)
-#          va = fc_va
-#          b_ij = tf.matmul(va,intra_fc)
-#          p_ij = tf.nn.softmax(b_ij)
-#          gradient = tf.matmul(p_ij, intra_feature)
-#          gradient = tf.reshape(gradient, tf.shape(grad[j]))
-#          gradients.append((gradient))
-##        print(tf.stack(gradientsgrients, axis = 0)
+
         return gradient
       with tf.name_scope("gradients"):
 #        pdb.set_trace()
