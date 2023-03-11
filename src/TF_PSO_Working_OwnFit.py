@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import pdb
 import problems
+import copy
 
 
 np.random.seed(123)
@@ -27,6 +28,7 @@ class pso:
         c2=0.5,
         x_min=-1,
         x_max=1,
+        x_init = None
         ):
         self.fitness_fn = fitness_fn
         self.mode = mode
@@ -38,20 +40,28 @@ class pso:
         self.c2 = c2
         self.x_min = x_min
         self.x_max = x_max
-        self.x = self.build_swarm()
+        self.x = self.build_swarm(x_init)
         self.p = self.x
         self.f_p = self.fitness_fn(self.x,batch_size=self.pop_size,dim=self.dim,mode=self.mode)
         self.fit_history = []
+        self.x_history = []
+        self.x_history.append(self.x)
+        if debug_mode:
+            pdb.set_trace()
         self.g = self.p[tf.math.argmin(input=self.f_p)]
         self.v = self.start_velocities()
 
 
-    def build_swarm(self):
+    def build_swarm(self,x_init):
         """Creates the swarm following the selected initialization method. 
         Returns:
             tf.Tensor: The PSO swarm population. Each particle represents a neural
             network. 
         """
+        if x_init!=None:
+            # x_internal = tf.Variable(tf.zeros(tf.shape(x_init)), dtype=tf.float32)
+            # x_internal.assign(x_init)
+            return x_init
         return tf.Variable(
             tf.random.uniform([self.pop_size, self.dim], self.x_min, self.x_max)
         )
@@ -114,6 +124,7 @@ class pso:
         """
         for i in range(self.n_iter):
             self.step()
+            self.x_history.append(self.x)
 
 def objective_function(X):
     return tf.math.sqrt(X[:,0]**2 + X[:,1]**2)[:,None]
@@ -142,23 +153,26 @@ def square_cos(x,mode='train',batch_size=10,num_dims=2,dtype=tf.float32,stddev=0
     return (tf.reduce_sum((product - y) ** 2, 1)) - tf.reduce_mean(product2) + 10*num_dims
 
 
-pop_size = 10
-dim = 2
+if __name__ == '__main__':
+    pop_size = 10
+    dim = 2
+    n_iter = 128
+    x_val = tf.get_variable("x",shape=[pop_size,dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
+    w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
+    y = tf.get_variable("y",shape=[pop_size, dim],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
+    wcos = tf.get_variable("wcos",shape=[pop_size, dim],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
 
-w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
-y = tf.get_variable("y",shape=[pop_size, dim],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
-wcos = tf.get_variable("wcos",shape=[pop_size, dim],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
-
-with tf.Session() as sess:
-    opt = pso(fitness_fn=fitness_function(),pop_size=pop_size, dim=dim, n_iter=128)
-    sess.run(tf.global_variables_initializer())
-    opt.train()
-    print(sess.run(opt.fit_history))
-    print(sess.run(opt.x))
-    # print(opt.f_p)
-# print(opt.fit_history)
-## Define the grid for future plotting:
+    with tf.Session() as sess:
+        opt = pso(fitness_fn=fitness_function(),pop_size=pop_size, dim=dim, n_iter=n_iter,x_init=x_val)
+        sess.run(tf.global_variables_initializer())
+        opt.train()
+        print(sess.run(opt.fit_history))
+        print(sess.run(opt.x))
+        # print(sess.run(opt.x_history))
+        # print(opt.f_p)
+    # print(opt.fit_history)
+    ## Define the grid for future plotting:
 
 
-# anim = animation.FuncAnimation(fig,snapshot,frames=60)
-# anim.save("PSO_tensorflow.mp4", fps=6)
+    # anim = animation.FuncAnimation(fig,snapshot,frames=60)
+    # anim.save("PSO_tensorflow.mp4", fps=6)

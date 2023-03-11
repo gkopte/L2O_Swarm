@@ -3,6 +3,9 @@ import numpy as np
 import pdb
 import problems
 import PSO
+import TF_PSO_Working_OwnFit
+
+debug_mode = True
 
 
 
@@ -35,6 +38,7 @@ def self_loss (x, fx_array, n):
 	fx_array,f1 = tf.split(fx_array, [n,0], 0)
 	problem_dim = x.shape.as_list()[-1]
 	batch_size = x.shape.as_list()[1]
+	print("Batch size ",batch_size)
 	x = tf.transpose(x, [1,0,2])
 	fx_array = tf.transpose(fx_array, [1,0])
 
@@ -129,40 +133,51 @@ def self_loss (x, fx_array, n):
 
 	def imitation_error(x, fx_array, n):
 		with tf.Session() as IL_sess:			
-			with tf.variable_scope("problem", reuse=tf.AUTO_REUSE):
-				x_val = tf.get_variable("x",shape=[1,problem_dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
-				w_val = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
-				y_val = tf.get_variable("y",shape=[1,problem_dim],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
-				w_val = tf.get_variable("wcos",shape=[1,problem_dim],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
+			# with tf.variable_scope("problem", reuse=tf.AUTO_REUSE):
+			# x_val = tf.get_variable("x",shape=[n,problem_dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
+			# w_val = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
+			# y_val = tf.get_variable("y",shape=[n,problem_dim],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
+			# w_val = tf.get_variable("wcos",shape=[n,problem_dim],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
+		
 			
-				IL_sess.run(tf.global_variables_initializer())
-				problem = problems.square_cos(batch_size=1, num_dims=problem_dim, mode='test')()
+			# problem = problems.square_cos(batch_size=1, num_dims=problem_dim, mode='test')()
 
-				# init_pos = [[i-1,i+1] for i in range(x.shape[1])]
-				print("x shape:", x.shape)
-				#print("x_val shape:", x_val.shape)
+			# init_pos = [[i-1,i+1] for i in range(x.shape[1])]
+			print("x shape:", x.shape)
+			#print("x_val shape:", x_val.shape)
 
-				first_instance = tf.slice(x, [0, 0, 0], [1, n,problem_dim])
-				first_instance = tf.squeeze(first_instance)
-				print(first_instance)
+			first_instance = tf.slice(x, [0, 0, 0], [1, n,problem_dim])
+			first_instance = tf.squeeze(first_instance)
+			print(first_instance)
+			x_pso = tf.Variable(tf.zeros(tf.shape(first_instance)), dtype=tf.float32)
+			x_pso.assign(first_instance)
+			
 
-				last_instance = tf.slice(x, [batch_size-1, 0, 0], [1, n,problem_dim])
-				last_instance = tf.squeeze(last_instance)
-				last_instance_np = IL_sess.run(last_instance)
+			last_instance = tf.slice(x, [batch_size-1, 0, 0], [1, n,problem_dim])
+			last_instance = tf.squeeze(last_instance)
+			IL_sess.run(tf.global_variables_initializer())
+			last_instance_np = IL_sess.run(last_instance)
 
-				init_pos = IL_sess.run(first_instance).tolist()
-				print("init_pos", init_pos)
-				print("n :",n)
-				init_vel = np.zeros(shape=(n,problem_dim)).tolist()
-				# init_vel = [np.zeros(x.shape[1:]).tolist() for i in range(n)]
-				print("init_vel", init_vel)
-				best_position, swarm = PSO.pso(IL_sess, PSO.fitness_fn,problem, x_val,batch_size, n, problem_dim, -3, 3,init_pos,init_vel)
-				print(best_position)
-				best_position_array = np.array(best_position)
-				# tf.reduce_mean(tf.reduce_sum(fx_array, -1))
-				output = tf.reduce_mean(tf.reduce_sum(tf.constant((best_position_array - last_instance_np)**2),-1))
-				num = IL_sess.run(output)
-				return num
+			init_pos = IL_sess.run(first_instance).tolist()
+			print("init_pos", init_pos)
+			print("n :",n)
+			# init_vel = np.zeros(shape=(n,problem_dim)).tolist()
+			# # init_vel = [np.zeros(x.shape[1:]).tolist() for i in range(n)]
+			# print("init_vel", init_vel)
+			# best_position, swarm = PSO.pso(IL_sess, PSO.fitness_fn,problem, x_val,batch_size, n, problem_dim, -3, 3,init_pos,init_vel)
+			pso_ = TF_PSO_Working_OwnFit.pso(fitness_fn=TF_PSO_Working_OwnFit.fitness_function(),pop_size=n, dim=problem_dim, n_iter=batch_size,x_init=x_pso)
+			IL_sess.run(tf.global_variables_initializer())
+			pso_.train()
+			
+			final_pos_pso = IL_sess.run(pso_.x)
+			print("final pos PSO: ",final_pos_pso)
+			final_pos_pso_array = np.array(final_pos_pso)
+			# tf.reduce_mean(tf.reduce_sum(fx_array, -1))
+			if debug_mode:
+				pdb.set_trace()
+			output = tf.reduce_mean(tf.reduce_sum(tf.constant((final_pos_pso_array - last_instance_np)**2),-1))
+			num = IL_sess.run(output)
+			return output
 			
 
 			#sess, fitness_fn,problem, max_iter, num_particles, num_dims, -3, 3,init_pos,init_vel
@@ -171,6 +186,7 @@ def self_loss (x, fx_array, n):
 	print("im_error shape:", im_error.shape)
 	print("sumfx shape:", sumfx.shape)
 	return sumfx+lam*h+im_error
+	# return 14561651
 
 if __name__ == "__main__":
 	# with tf.variable_scope("square_cos", reuse=tf.AUTO_REUSE):
@@ -193,17 +209,17 @@ if __name__ == "__main__":
 			loss = self_loss(x, fx_array, 10)
 		
 			print(loss)
-			print (loss.shape)
+			print(loss.shape)
 			
 		
-			for i in range(20):
-				# sess.run(tf.global_variables_initializer())
-				if i == 10:
-					sess.run(x.assign(tf.zeros((10,128, 2))))
-					#print(sess.run(x))
+			# for i in range(20):
+			# 	# sess.run(tf.global_variables_initializer())
+			# 	if i == 10:
+			# 		sess.run(x.assign(tf.zeros((10,128, 2))))
+			# 		#print(sess.run(x))
 					
-					sess.run(fx_array.assign(tf.zeros((10, 128))))		
-				print(sess.run(loss))
+			# 		sess.run(fx_array.assign(tf.zeros((10, 128))))		
+			# 	print(sess.run(loss))
 
 				# print()
 				#tt1 = sess.run(t1)
