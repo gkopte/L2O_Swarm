@@ -5,7 +5,7 @@ import problems
 import PSO
 import TF_PSO_Working_OwnFit
 
-debug_mode = False
+debug_mode = True
 
 
 
@@ -131,8 +131,8 @@ def self_loss (x, fx_array, n):
 	# 	result = IL_sess.run(problem)
 	# 	return result.reshape(-1, 1).astype(np.float32)
 
-	# def imitation_error(x, fx_array, n):
-	with tf.Session() as IL_sess:			
+	def imitation_error(x, fx_array, n):
+		# with tf.Session() as IL_sess:			
 		# with tf.variable_scope("problem", reuse=tf.AUTO_REUSE):
 		# x_val = tf.get_variable("x",shape=[n,problem_dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
 		# w_val = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
@@ -153,8 +153,8 @@ def self_loss (x, fx_array, n):
 		x_pso.assign(first_instance)
 		
 
-		last_instance = tf.slice(x, [batch_size-1, 0, 0], [1, n,problem_dim])
-		last_instance = tf.squeeze(last_instance)
+		# last_instance = tf.slice(x, [batch_size-1, 0, 0], [1, n,problem_dim])
+		# last_instance = tf.squeeze(last_instance)
 		# IL_sess.run(tf.global_variables_initializer())
 		# last_instance_np = IL_sess.run(last_instance)
 
@@ -168,19 +168,21 @@ def self_loss (x, fx_array, n):
 		pso_ = TF_PSO_Working_OwnFit.pso(fitness_fn=TF_PSO_Working_OwnFit.fitness_function(),pop_size=n, dim=problem_dim, n_iter=batch_size,x_init=x_pso)
 		# IL_sess.run(tf.global_variables_initializer())
 		pso_.train()
-		
+
+		x_history = tf.reshape(pso_.x_history[1::], (batch_size, n, problem_dim))
 		# final_pos_pso = IL_sess.run(pso_.x)
 		# print("final pos PSO: ",final_pos_pso)
 		# final_pos_pso_array = np.array(final_pos_pso)
 		# # tf.reduce_mean(tf.reduce_sum(fx_array, -1))
+
+		# output = tf.reduce_mean(tf.reduce_sum(tf.constant((final_pos_pso_array - last_instance_np)**2),-1))
+		# output = tf.reduce_mean(tf.reduce_sum((x_history - x)**2,0))
 		if debug_mode:
 			pdb.set_trace()
-		# output = tf.reduce_mean(tf.reduce_sum(tf.constant((final_pos_pso_array - last_instance_np)**2),-1))
-		# output = tf.reduce_mean(tf.reduce_sum((pso_.x - last_instance)**2,-1))
+		output = tf.reduce_sum(tf.reduce_sum((x_history - x)**2,0))
 
 		# num = IL_sess.run(output)
-		# return output
-		return tf.reduce_mean(tf.reduce_sum((pso_.x - last_instance)**2,-1))
+		return output
 			
 
 			#sess, fitness_fn,problem, max_iter, num_particles, num_dims, -3, 3,init_pos,init_vel
@@ -188,8 +190,8 @@ def self_loss (x, fx_array, n):
 	im_error = imitation_error(x, fx_array, n)
 	print("im_error shape:", im_error.shape)
 	print("sumfx shape:", sumfx.shape)
-	return sumfx+lam*h+im_error
-	# return 14561651
+	# return sumfx+lam*h+im_error
+	return im_error
 
 if __name__ == "__main__":
 	# with tf.variable_scope("square_cos", reuse=tf.AUTO_REUSE):
