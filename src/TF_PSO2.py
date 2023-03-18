@@ -1,21 +1,24 @@
 import tensorflow as tf
-tf.enable_eager_execution()
+# tf.enable_eager_execution()
 # import tensorflow_probability as tfp
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+import problems
 import pdb
-
 
 np.random.seed(123)
 tf.random.set_random_seed(123)
 # tf.random.set_random_seed(123)
 
-debug_mode = False
+debug_mode = True
 
 class pso:
     def __init__(
         self,
+        session,
+        # problem,
+        x,
         fitness_fn,
         pop_size=10,
         dim=2,
@@ -26,6 +29,9 @@ class pso:
         x_min=-1,
         x_max=1,
         ):
+        self.x_ = x
+        self.sess = session
+        # self.problem = problem
         self.fitness_fn = fitness_fn
         self.pop_size = pop_size
         self.dim = dim
@@ -37,9 +43,11 @@ class pso:
         self.x_max = x_max
         self.x = self.build_swarm()
         self.p = self.x
-        self.f_p = self.fitness_fn(self.x)
+        self.f_p = self.fitness_fn(x,self.x)
         self.fit_history = []
-        self.g = self.p[tf.math.argmin(input=self.f_p).numpy()[0]]
+        if debug_mode is True:
+            pdb.set_trace()
+        self.g = self.p[tf.math.argmin(input=self.f_p)]
         self.v = self.start_velocities()
 
 
@@ -78,20 +86,20 @@ class pso:
     def update_p_best(self):
         """Updates the *p-best* positions. 
         """
-        f_x = self.fitness_fn(self.x)
-        self.fit_history.append(tf.reduce_mean(f_x).numpy())
+        f_x = self.fitness_fn(x,self.x)
+        self.fit_history.append(tf.reduce_mean(f_x))
         if debug_mode is True:
             pdb.set_trace()
-        f_x_tiled = tf.tile(f_x, [1, self.dim])
-        f_p_tiled = tf.tile(self.f_p, [1, self.dim])
+        # f_x_tiled = tf.tile(f_x, [1, self.dim])
+        # f_p_tiled = tf.tile(self.f_p, [1, self.dim])
         
-        self.p = tf.where(f_x_tiled < f_p_tiled, self.x, self.p)
+        self.p = tf.where(f_x < self.f_p, self.x, self.p)
         self.f_p = tf.where(f_x < self.f_p, f_x, self.f_p)
 
     def update_g_best(self):
         """Update the *g-best* position. 
         """
-        self.g = self.p[tf.math.argmin(input=self.f_p).numpy()[0]]
+        self.g = self.p[tf.math.argmin(input=self.f_p)]
 
     def step(self):
         """It runs ONE step on the particle swarm optimization. 
@@ -105,6 +113,7 @@ class pso:
         self.x = tf.clip_by_value(self.x + self.v, self.x_min, self.x_max)
         self.update_p_best()
         self.update_g_best()
+        return sess.run((self.p,self.f_p,self.g))
 
     def train(self):
         """The particle swarm optimization. The PSO will optimize the weights according to the losses of the neural network, so this process is actually the neural network training. 
@@ -124,26 +133,58 @@ def fitness_function():
         return objective_function(X)
     return f
 
-opt = pso(fitness_fn=fitness_function(),pop_size=10, dim=2, n_iter=128)
-opt.train()
 
-
-print(opt.g)
-print(opt.f_p)
-print(opt.fit_history)
 ## Define the grid for future plotting:
-xlist = np.linspace(-1.0, 1.0, 10)
-ylist = np.linspace(-1.0, 1.0, 10)
-X, Y = np.meshgrid(xlist, ylist)
-Z = - np.sqrt(X**2 + Y**2)
+
+def fitness_fn(x,x_val):
+  #print("x shape: {}".format(x.shape))
+#   x_val = np.array(x_val,dtype=np.float32).reshape(1,-1)
+  #print("x_val shape: {}".format(x_val.shape))
+#   sess.run(x.assign(x_val))
+  #print(sess.run(x))
+  x.assign(x_val)
+  problem = problems.square_cos(batch_size=10, num_dims=2, mode='test')()
+  return problem
+
+if __name__ == '__main__':
+  with tf.Session() as sess:
+
+    with tf.variable_scope("square_cos", reuse=tf.AUTO_REUSE):
+        sess.run(tf.global_variables_initializer())
+        x = tf.get_variable("x",shape=[10, 2],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
+        opt = pso(sess,x,fitness_fn=fitness_fn,pop_size=10, dim=2, n_iter=1)
+        out = opt.step()
+        print(out)
 
 
-def snapshot(i):
-    opt.train()
-    plt.contourf(X, Y, Z, cmap='rainbow', levels=50)
-    plt.scatter(opt.x[:,0],opt.x[:,1], color='b')
+# if __name__ == '__main__':
+#   num_particles = 10
+#   max_iter = 128
+#   with tf.Session() as sess:
+    
+#     with tf.variable_scope("square_cos", reuse=tf.AUTO_REUSE):
+#       x = tf.get_variable("x",shape=[num_particles, 2],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
+#       w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
+#       y = tf.get_variable("y",shape=[num_particles, 2],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
+#       wcos = tf.get_variable("wcos",shape=[num_particles, 2],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
+      
+#       sess.run(tf.global_variables_initializer())
+#       problem = problems.square_cos(batch_size=num_particles, num_dims=2, mode='test')()
 
-fig = plt.figure(figsize=(8, 8), dpi=100)
+#     # best_position = pso(sess,fitness_fn, max_iter, num_particles, num_dims, -3, 3)
+#     # init_pos = [[i-1,i+1] for i in range(num_particles)]
+#     # init_vel = [[0,0] for i in range(num_particles)]
+#     # best_position, swarm = pso(sess, fitness_fn,problem,x ,max_iter, num_particles, num_dims, -3, 3,init_pos,init_vel)
 
-# anim = animation.FuncAnimation(fig,snapshot,frames=60)
-# anim.save("PSO_tensorflow.mp4", fps=6)
+#     opt = pso(sess,problem,x,fitness_fn=fitness_fn,pop_size=10, dim=2, n_iter=128)
+#     sess.run(opt.step())
+#     # print(out)
+#     # print(sess.run(opt.fit_history))
+
+
+    # print(opt.g)
+    # print(opt.f_p)
+    # print(opt.fit_history)
+
+    # print(best_position)
+    # print([part.position for part in swarm])

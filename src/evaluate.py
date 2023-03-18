@@ -52,7 +52,7 @@ def main(_):
   elif FLAGS.optimizer == "L2L":
     if FLAGS.path is None:
       logging.warning("Evaluating untrained L2L optimizer")
-    optimizer = meta.MetaOptimizer(FLAGS.problem,, FLAGS.num_particle,  **net_config)
+    optimizer = meta.MetaOptimizer(FLAGS.problem,FLAGS.num_particle,  **net_config)
     meta_loss = optimizer.meta_loss(problem, 1, net_assignments=net_assignments, model_path = FLAGS.path)
     loss, update, reset, cost_op, x_final, constant = meta_loss
   else:
@@ -64,21 +64,24 @@ def main(_):
     all_time_loss_record = []
     total_time = 0
     total_cost = 0
-    x_record = [[sess.run(item) for item in x_final]]
+    # x_record = [[sess.run(item) for item in x_final]]
+    total_steps = []
     for _ in xrange(FLAGS.num_epochs):
       # Training.
-      time, cost,  constants = util.eval_run_epoch(sess, cost_op, [update], reset,
+      time, cost,  constants, step = util.eval_run_epoch(sess, cost_op, [update], reset,
                                   num_unrolls, x_final, constant)
       total_time += time
       all_time_loss_record.append(cost)
+      total_steps.append(step)
     with open('./{}/evaluate_record.pickle'.format(FLAGS.path),'wb') as l_record:
       record = {'all_time_loss_record':all_time_loss_record,'loss':cost,\
                 'constants':[sess.run(item) for item in constants],\
-                }
+                'steps': total_steps}
       pickle.dump(record, l_record)
     # Results.
     util.print_stats("Epoch {}".format(FLAGS.num_epochs), total_cost,
                      total_time, FLAGS.num_epochs)
+    
 
 
 if __name__ == "__main__":

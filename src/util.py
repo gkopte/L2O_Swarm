@@ -12,6 +12,8 @@ from six.moves import xrange
 import problems
 import pdb
 
+debug_mode = False
+
 def run_epoch(sess, cost_op, ops, reset, num_unrolls, var1, var2):
   """Runs one optimization epoch."""
   start = timer()
@@ -34,20 +36,35 @@ def eval_run_epoch(sess, cost_op, ops, reset, num_unrolls, var1, var2):
   for _ in xrange(num_unrolls):
     step = sess.run(ops)
     cost=[]
+    self_loss = []
+    loss = []
     for i in range(len(cost_op)):
-      sub_cost = (sess.run([cost_op[i]]) + step)[0] 
+      sub_self_loss  = sess.run([cost_op[i]])
+      sub_cost = (sub_self_loss + step)[0] 
+      # sub_cost = (sess.run([cost_op[i]]) + step)[0] 
+      self_loss.append(sub_self_loss)
+      loss.append(step[0])
       cost.append(sub_cost)
+
+    if debug_mode:
+      pdb.set_trace()
+    # print(f'\nsub_cost:{np.mean(cost)} = sub_self_loss({np.mean(self_loss)}) + loss({np.mean(cost)-np.mean(self_loss)})')
     print ('cost', np.mean(cost))
     cost_all.append(cost)
-  return timer() - start, cost_all,  var2
+  return timer() - start, cost_all,  var2, step
 
 
 def print_stats(header, total_error, total_time, n):
   """Prints experiment statistics."""
   print(header)
-  print("Log Mean Final Error: {:.2f}".format(np.log10(total_error / n)))
-  print("Mean epoch time: {:.2f} s".format(total_time / n))
-
+  if total_error!=0:
+    # print(n)
+    # print(total_error)
+    print("Log Mean Final Error: {:.2f}".format(np.log10(total_error / n)))
+    print("Mean epoch time: {:.2f} s".format(total_time / n))  
+  else:
+    print("Log Mean Final Error: inf")
+    print("Mean epoch time: {:.2f} s".format(total_time / n))
 
 def get_net_path(name, path):
   return None if path is None else os.path.join(path, name + ".l2l")

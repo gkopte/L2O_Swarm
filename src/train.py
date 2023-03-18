@@ -18,6 +18,7 @@ import pdb
 
 flags = tf.flags
 logging = tf.logging
+debug_mode = False
 
 
 FLAGS = flags.FLAGS
@@ -76,7 +77,8 @@ def main(_):
     total_cost = 0
     loss_record = []
     constants = []
-    pdb.set_trace()
+    if debug_mode:
+      pdb.set_trace()
     for e in xrange(FLAGS.num_epochs):
       # Training.
       time, cost, constant, Weights = util.run_epoch(sess, cost_op, [update, step], reset,

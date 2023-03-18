@@ -22,6 +22,8 @@ import networks
 import pickle
 import pdb
 
+debug_mode = False
+
 
 def _nested_assign(ref, value):
   """Returns a nested collection of TensorFlow assign operations.
@@ -290,7 +292,8 @@ class MetaOptimizer(object):
     
     sub_x, sub_constants=_get_variables(make_loss)
     print (sub_x, sub_constants)
-    pdb.set_trace()
+    if debug_mode:
+      pdb.set_trace()
 #    print(len(sub_x))
     
     def intra_init(x):
@@ -698,8 +701,8 @@ class MetaOptimizer(object):
     # we need x_array for calculating the entropy loss
     x_array = tf.TensorArray(tf.float32, size=(len_unroll + 1)*self.num_lstm,
                               clear_after_read=False)
-
-    pdb.set_trace()
+    if debug_mode:
+      pdb.set_trace()
     _, fx_array, x_final, x_array, s_final = tf.while_loop(
         cond=lambda t, *_: t < len_unroll,
         body=time_step,
@@ -707,7 +710,7 @@ class MetaOptimizer(object):
         parallel_iterations=1,
         swap_memory=True,
         name="unroll")
-
+    print('fx_array: ',fx_array)
     with tf.name_scope("fx"):
 #      pdb.set_trace()
 #      print('x_final',x_final)
@@ -733,7 +736,7 @@ class MetaOptimizer(object):
     
     loss = entropy_loss.self_loss(x_array.stack(), fx_array.stack(), (len_unroll + 1)*self.num_lstm)
     #loss = tf.reduce_mean(tf.reduce_sum(fx_array.stack(), -1))
-    #print (loss.shape)
+    # print (loss.shape)
     #exit(0)
     
 
