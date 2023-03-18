@@ -9,6 +9,7 @@ debug_mode = False
 
 
 
+
 def distance_matrix(x1, n1, x2, n2, dim): 
 	# calculating the distance matrix of x1, x2; x1 shape:(n1, dim)  x2 shape(n2, dim), return shape (n1, n2)
 	y1 = tf.tile(x1, [1, n2, 1])  # y1 shape: (n1*n2, dim)
@@ -124,108 +125,81 @@ def self_loss (x, fx_array, n):
 	h0 = entropy(x, fx_array,  [preh,0])
 	h  = entropy(x, fx_array,  [h0,1])
 
-	# def fitness_fn(IL_sess, problem, x_val):
-	# 	x_val = np.array(x_val,dtype=np.float32).reshape(1, -1)
-	# 	IL_sess.run(x.assign(x_val))
-	# 	#print(sess.run(x))
-	# 	result = IL_sess.run(problem)
-	# 	return result.reshape(-1, 1).astype(np.float32)
-
-	def imitation_error(x, fx_array, n):
-		# with tf.Session() as IL_sess:			
-		# with tf.variable_scope("problem", reuse=tf.AUTO_REUSE):
-		# x_val = tf.get_variable("x",shape=[n,problem_dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
-		# w_val = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
-		# y_val = tf.get_variable("y",shape=[n,problem_dim],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
-		# w_val = tf.get_variable("wcos",shape=[n,problem_dim],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
-	
-		
-		# problem = problems.square_cos(batch_size=1, num_dims=problem_dim, mode='test')()
-
-		# init_pos = [[i-1,i+1] for i in range(x.shape[1])]
+	def imitation_error(x, fx_array, n, option=''):
+		print('imitation_error option: ',option)
 		print("x shape:", x.shape)
-		#print("x_val shape:", x_val.shape)
 
+		# gettinng initial x for this unroll
 		first_instance = tf.slice(x, [0, 0, 0], [1, n,problem_dim])
 		first_instance = tf.squeeze(first_instance)
 		print(first_instance)
+
+		#creating tensor for pso x and coping initial x to it
 		x_pso = tf.Variable(tf.zeros(tf.shape(first_instance)), dtype=tf.float32)
 		x_pso.assign(first_instance)
 		
-
-		# last_instance = tf.slice(x, [batch_size-1, 0, 0], [1, n,problem_dim])
-		# last_instance = tf.squeeze(last_instance)
-		# IL_sess.run(tf.global_variables_initializer())
-		# last_instance_np = IL_sess.run(last_instance)
-
-		# init_pos = IL_sess.run(first_instance).tolist()
-		# print("init_pos", init_pos)
-		# print("n :",n)
-		# init_vel = np.zeros(shape=(n,problem_dim)).tolist()
-		# # init_vel = [np.zeros(x.shape[1:]).tolist() for i in range(n)]
-		# print("init_vel", init_vel)
-		# best_position, swarm = PSO.pso(IL_sess, PSO.fitness_fn,problem, x_val,batch_size, n, problem_dim, -3, 3,init_pos,init_vel)
+		# building pso graph 
 		pso_ = TF_PSO_Working_OwnFit.pso(fitness_fn=TF_PSO_Working_OwnFit.fitness_function(),pop_size=n, dim=problem_dim, n_iter=batch_size,x_init=x_pso)
-		# IL_sess.run(tf.global_variables_initializer())
 		pso_.train()
 
-		x_history = tf.reshape(pso_.x_history[1::], (batch_size, n, problem_dim))
-		# final_pos_pso = IL_sess.run(pso_.x)
-		# print("final pos PSO: ",final_pos_pso)
-		# final_pos_pso_array = np.array(final_pos_pso)
-		# # tf.reduce_mean(tf.reduce_sum(fx_array, -1))
+		# getting pso x history to calculate loss
+		pso_x_history = tf.reshape(pso_.x_history[1::], (batch_size, n, problem_dim))
 
-		# output = tf.reduce_mean(tf.reduce_sum(tf.constant((final_pos_pso_array - last_instance_np)**2),-1))
-		# output = tf.reduce_mean(tf.reduce_sum((x_history - x)**2,0))
-		if debug_mode:
-			pdb.set_trace()
-		im_loss = tf.reduce_sum(tf.reduce_sum((x_history - x)**2,0))
-		# huber = huber_loss(x_history,x)
-		# im_loss = tf.sqrt(tf.reduce_mean(tf.square(x_history - x)))
-		# huber_loss = tf.keras.losses.Huber(delta=1.0)
-		# im_loss = huber_loss(x_history, x)
-		# output = tf.reduce_sum((x_history - x)**2,0)
-		# num = IL_sess.run(output)
-		# def huber_loss(y_true, y_pred, delta=1.0):
-		# 	"""Huber loss function."""
-		# 	error = y_true - y_pred
-		# 	abs_error = tf.abs(error)
-		# 	quadratic_part = tf.minimum(abs_error, delta)
-		# 	linear_part = abs_error - quadratic_part
-		# 	loss = 0.5 * tf.square(quadratic_part) + delta * linear_part
-		# 	return tf.reduce_mean(loss)		
-
-		# def custom_loss(y_true, y_pred):
-		# 	z = tf.abs(y_true - y_pred)
-		# 	quadratic = tf.maximum(1.0, z)**2
-		# 	absolute = tf.minimum(1.0, z)
-		# 	return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
+		def custom_loss(y_true, y_pred):
+			z = tf.abs(y_true - y_pred)
+			quadratic = tf.maximum(1.0, z)**2
+			absolute = tf.minimum(1.0, z)
+			return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
 		
-		# custom_error = custom_loss(x_history,x)
-
+		if option=='custom':
+			im_loss = custom_loss(pso_x_history,x)
+		elif option=='rmse':
+			im_loss = tf.sqrt(tf.reduce_mean(tf.square(pso_x_history - x)))
+		elif option=='huber':
+			huber_loss = tf.keras.losses.Huber(delta=1.0)
+			im_loss = huber_loss(pso_x_history, x)
+		else: #mse
+			im_loss = tf.reduce_sum(tf.reduce_sum((pso_x_history - x)**2,0))
 		return im_loss
 	
-	# def l2_normalize(x, axis=1, epsilon=1e-12):
-	# 	"""L2 normalization function."""
-	# 	squared_norm = tf.reduce_sum(tf.square(x), axis=axis, keepdims=True)
-	# 	norm = tf.sqrt(squared_norm + epsilon)
-	# 	return norm
-	
-	if debug_mode:
-		pdb.set_trace()
-	im_error = imitation_error(x, fx_array, n)
-	print("im_error shape:", im_error.shape)
-	print("sumfx shape:", sumfx.shape)
-	# return sumfx+lam*h
-	# return sumfx+lam*h+im_error
-	return sumfx+im_error
-
-	# norm = tf.squeeze(l2_normalize([[sumfx,im_error]]))
-	# return sumfx/norm + im_error/norm
-	# return lam*h
-	# return sumfx
-	# return im_error
-	# return tf.constant(0.0)
+	im_loss_option = 'mse'
+	k = 1.0 # imitation scaling factor
+	if im_loss_option=='mse':
+		im_loss = imitation_error(x, fx_array, n,'mse')
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
+	elif im_loss_option=='rmse':
+		im_loss = imitation_error(x, fx_array, n,'rmse')
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
+	elif im_loss_option=='huber':
+		im_loss = imitation_error(x, fx_array, n,'rmse')
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
+	elif im_loss_option=='custom':
+		im_loss = imitation_error(x, fx_array, n,'custom')
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
+	elif im_loss_option=='only_im':
+		im_loss = imitation_error(x, fx_array, n,'mse')
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return im_loss*k
+	elif im_loss_option=='only_sumfx':
+		print("sumfx shape:", sumfx.shape)
+		return sumfx
+	elif im_loss_option=='entropy_im':
+		im_loss = imitation_error(x, fx_array, n,'rmse')
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+lam*h+im_loss*k
+	else:
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+lam*h
 
 if __name__ == "__main__":
 	# with tf.variable_scope("square_cos", reuse=tf.AUTO_REUSE):
