@@ -130,14 +130,6 @@ def self_loss (x, fx_array, n):
 	# 	#print(sess.run(x))
 	# 	result = IL_sess.run(problem)
 	# 	return result.reshape(-1, 1).astype(np.float32)
-	def huber_loss(y_true, y_pred, delta=1.0):
-		"""Huber loss function."""
-		error = y_true - y_pred
-		abs_error = tf.abs(error)
-		quadratic_part = tf.minimum(abs_error, delta)
-		linear_part = abs_error - quadratic_part
-		loss = 0.5 * tf.square(quadratic_part) + delta * linear_part
-		return tf.reduce_mean(loss)
 
 	def imitation_error(x, fx_array, n):
 		# with tf.Session() as IL_sess:			
@@ -187,37 +179,37 @@ def self_loss (x, fx_array, n):
 		# output = tf.reduce_mean(tf.reduce_sum((x_history - x)**2,0))
 		if debug_mode:
 			pdb.set_trace()
-		# im_loss = tf.reduce_sum(tf.reduce_sum((x_history - x)**2,0))
+		im_loss = tf.reduce_sum(tf.reduce_sum((x_history - x)**2,0))
 		# huber = huber_loss(x_history,x)
 		# im_loss = tf.sqrt(tf.reduce_mean(tf.square(x_history - x)))
 		# huber_loss = tf.keras.losses.Huber(delta=1.0)
 		# im_loss = huber_loss(x_history, x)
 		# output = tf.reduce_sum((x_history - x)**2,0)
 		# num = IL_sess.run(output)
-		def huber_loss(y_true, y_pred, delta=1.0):
-			"""Huber loss function."""
-			error = y_true - y_pred
-			abs_error = tf.abs(error)
-			quadratic_part = tf.minimum(abs_error, delta)
-			linear_part = abs_error - quadratic_part
-			loss = 0.5 * tf.square(quadratic_part) + delta * linear_part
-			return tf.reduce_mean(loss)		
+		# def huber_loss(y_true, y_pred, delta=1.0):
+		# 	"""Huber loss function."""
+		# 	error = y_true - y_pred
+		# 	abs_error = tf.abs(error)
+		# 	quadratic_part = tf.minimum(abs_error, delta)
+		# 	linear_part = abs_error - quadratic_part
+		# 	loss = 0.5 * tf.square(quadratic_part) + delta * linear_part
+		# 	return tf.reduce_mean(loss)		
 
-		def custom_loss(y_true, y_pred):
-			z = tf.abs(y_true - y_pred)
-			quadratic = tf.maximum(1.0, z)**2
-			absolute = tf.minimum(1.0, z)
-			return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
+		# def custom_loss(y_true, y_pred):
+		# 	z = tf.abs(y_true - y_pred)
+		# 	quadratic = tf.maximum(1.0, z)**2
+		# 	absolute = tf.minimum(1.0, z)
+		# 	return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
 		
-		custom_error = custom_loss(x_history,x)
+		# custom_error = custom_loss(x_history,x)
 
-		return custom_error
+		return im_loss
 	
-	def l2_normalize(x, axis=1, epsilon=1e-12):
-		"""L2 normalization function."""
-		squared_norm = tf.reduce_sum(tf.square(x), axis=axis, keepdims=True)
-		norm = tf.sqrt(squared_norm + epsilon)
-		return norm
+	# def l2_normalize(x, axis=1, epsilon=1e-12):
+	# 	"""L2 normalization function."""
+	# 	squared_norm = tf.reduce_sum(tf.square(x), axis=axis, keepdims=True)
+	# 	norm = tf.sqrt(squared_norm + epsilon)
+	# 	return norm
 	
 	if debug_mode:
 		pdb.set_trace()
