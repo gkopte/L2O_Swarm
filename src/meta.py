@@ -770,7 +770,7 @@ class MetaOptimizer(object):
 
     return MetaLoss(loss, update, reset, fx_final, x_final, sub_constants)
 
-  def meta_minimize(self, make_loss, len_unroll, learning_rate=0.01, **kwargs):
+  def meta_minimize(self, make_loss, len_unroll, im_loss_option,learning_rate=0.01, **kwargs):
     """Returns an operator minimizing the meta-loss.
 
     Args:
@@ -783,7 +783,7 @@ class MetaOptimizer(object):
     Returns:
       namedtuple containing (step, update, reset, fx, x)
     """
-    info = self.meta_loss(make_loss, len_unroll, **kwargs)
+    info = self.meta_loss(make_loss, len_unroll, im_loss_option,**kwargs)
     optimizer = tf.train.AdamOptimizer(learning_rate)
     regular = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(1e-4), tf.trainable_variables())
 #    gradients = optimizer.compute_gradients(info.loss+regular)

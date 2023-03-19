@@ -34,6 +34,8 @@ flags.DEFINE_integer("num_steps", 100,
 flags.DEFINE_integer("unroll_length", 20, "Meta-optimizer unroll length.")
 flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
 flags.DEFINE_boolean("second_derivatives", False, "Use second derivatives.")
+flags.DEFINE_string("im_loss_option", "mse", "function used in the imitation learning loss")
+
 
 
 def main(_):
@@ -58,6 +60,7 @@ def main(_):
   
   minimize = optimizer.meta_minimize(
               problem, FLAGS.unroll_length,
+              FLAGS.im_loss_option,
               learning_rate=FLAGS.learning_rate,
               net_assignments=net_assignments,
               model_path = path,
