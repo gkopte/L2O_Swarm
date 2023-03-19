@@ -27,6 +27,7 @@ flags.DEFINE_string("problem", "simple", "Type of problem.")
 flags.DEFINE_integer("num_steps", 250,
                      "Number of optimization steps per epoch.")
 flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
+flags.DEFINE_string("im_loss_option", "mse", "function used in the imitation learning loss")
 
 def main(_):
   # Configuration.
@@ -53,7 +54,7 @@ def main(_):
     if FLAGS.path is None:
       logging.warning("Evaluating untrained L2L optimizer")
     optimizer = meta.MetaOptimizer(FLAGS.problem,FLAGS.num_particle,  **net_config)
-    meta_loss = optimizer.meta_loss(problem, 1, net_assignments=net_assignments, model_path = FLAGS.path)
+    meta_loss = optimizer.meta_loss(problem, 1,FLAGS.im_loss_option ,net_assignments=net_assignments, model_path = FLAGS.path)
     loss, update, reset, cost_op, x_final, constant = meta_loss
   else:
     raise ValueError("{} is not a valid optimizer".format(FLAGS.optimizer))
@@ -65,18 +66,18 @@ def main(_):
     total_time = 0
     total_cost = 0
     # x_record = [[sess.run(item) for item in x_final]]
-    total_steps = []
+    var_history = []
     for _ in xrange(FLAGS.num_epochs):
       # Training.
-      time, cost,  constants, step = util.eval_run_epoch(sess, cost_op, [update], reset,
+      time, cost,  constants, var = util.eval_run_epoch(sess, cost_op, [update], reset,
                                   num_unrolls, x_final, constant)
       total_time += time
       all_time_loss_record.append(cost)
-      total_steps.append(step)
+      var_history.append(var)
     with open('./{}/evaluate_record.pickle'.format(FLAGS.path),'wb') as l_record:
       record = {'all_time_loss_record':all_time_loss_record,'loss':cost,\
                 'constants':[sess.run(item) for item in constants],\
-                'steps': total_steps}
+                'var_history': var_history}
       pickle.dump(record, l_record)
     # Results.
     util.print_stats("Epoch {}".format(FLAGS.num_epochs), total_cost,

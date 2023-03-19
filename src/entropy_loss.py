@@ -28,7 +28,7 @@ def distance_matrix(x1, n1, x2, n2, dim):
 
 
 
-def self_loss (x, fx_array, n):
+def self_loss (x, fx_array, n,im_loss_option):
 	# lambda values for controling the  balance between exploitation and exploration.
 	lam=0.001
 	print(x)
@@ -162,7 +162,8 @@ def self_loss (x, fx_array, n):
 			im_loss = tf.reduce_sum(tf.reduce_sum((pso_x_history - x)**2,0))
 		return im_loss
 	
-	im_loss_option = 'mse'
+	# im_loss_option = 'mse'
+	
 	k = 1.0 # imitation scaling factor
 	if im_loss_option=='mse':
 		im_loss = imitation_error(x, fx_array, n,'mse')
@@ -197,6 +198,9 @@ def self_loss (x, fx_array, n):
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+lam*h+im_loss*k
+	elif im_loss_option is None or im_loss_option.lower()=='none': #Sanity check
+		print("Warning: No self loss")
+		return 0
 	else:
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+lam*h

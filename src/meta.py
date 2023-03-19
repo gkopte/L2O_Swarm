@@ -269,6 +269,7 @@ class MetaOptimizer(object):
   def meta_loss(self,
                 make_loss,
                 len_unroll,
+                im_loss_option,
                 net_assignments=None,
                 model_path = None,
                 second_derivatives=False):
@@ -734,7 +735,7 @@ class MetaOptimizer(object):
 
     print (x[0].shape, x_final[0].shape,  len(fx_final),'xinfal11', len_unroll)
     
-    loss = entropy_loss.self_loss(x_array.stack(), fx_array.stack(), (len_unroll + 1)*self.num_lstm)
+    loss = entropy_loss.self_loss(x_array.stack(), fx_array.stack(), (len_unroll + 1)*self.num_lstm, im_loss_option)
     #loss = tf.reduce_mean(tf.reduce_sum(fx_array.stack(), -1))
     # print (loss.shape)
     #exit(0)
