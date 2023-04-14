@@ -139,6 +139,7 @@ def self_loss (x, fx_array, n,im_loss_option):
 		x_pso.assign(first_instance)
 		
 		# building pso graph 
+		print('n: ', n)
 		pso_ = TF_PSO_Working_OwnFit.pso(fitness_fn=TF_PSO_Working_OwnFit.fitness_function(),pop_size=n, dim=problem_dim, n_iter=batch_size,x_init=x_pso)
 		pso_.train()
 
@@ -158,7 +159,9 @@ def self_loss (x, fx_array, n,im_loss_option):
 		elif option=='huber':
 			huber_loss = tf.keras.losses.Huber(delta=1.0)
 			im_loss = huber_loss(pso_x_history, x)
-		else: #mse
+		elif option=='mse': 
+			im_loss = tf.reduce_mean(tf.reduce_mean((pso_x_history - x)**2,0))
+		else: #sumed square
 			im_loss = tf.reduce_sum(tf.reduce_sum((pso_x_history - x)**2,0))
 		return im_loss
 	
@@ -170,13 +173,18 @@ def self_loss (x, fx_array, n,im_loss_option):
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
+	elif im_loss_option=='square':
+		im_loss = imitation_error(x, fx_array, n,'square')
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
 	elif im_loss_option=='rmse':
 		im_loss = imitation_error(x, fx_array, n,'rmse')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
 	elif im_loss_option=='huber':
-		im_loss = imitation_error(x, fx_array, n,'rmse')
+		im_loss = imitation_error(x, fx_array, n,'huber')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
@@ -186,7 +194,7 @@ def self_loss (x, fx_array, n,im_loss_option):
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
 	elif im_loss_option=='only_im':
-		im_loss = imitation_error(x, fx_array, n,'mse')
+		im_loss = imitation_error(x, fx_array, n,'square')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return im_loss*k
@@ -194,7 +202,7 @@ def self_loss (x, fx_array, n,im_loss_option):
 		print("sumfx shape:", sumfx.shape)
 		return sumfx
 	elif im_loss_option=='entropy_im':
-		im_loss = imitation_error(x, fx_array, n,'rmse')
+		im_loss = imitation_error(x, fx_array, n,'square')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+lam*h+im_loss*k
