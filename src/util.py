@@ -11,6 +11,7 @@ from six.moves import xrange
 
 import problems
 import pdb
+import tensorflow as tf
 
 debug_mode = False
 
@@ -33,25 +34,41 @@ def eval_run_epoch(sess, cost_op, ops, reset, num_unrolls, var1, var2):
   start = timer()
   sess.run(reset)
   cost_all =[]
+  x_history = []
+  y_history = []
   for _ in xrange(num_unrolls):
     step = sess.run(ops)
     cost=[]
     self_loss = []
-    loss = []
+    step = []
+    step.append(step)
+    # ops = tf.get_default_graph()
+    x_ = sess.run(var1[0])
+    # y_ = sess.run(var1[1])
+    # print(x_[:,0,:])
+    # print(x_[:,-1,:])
+    # print(y_[:,0,:])
+    # print(y_[:,-1,:])
+    x_history.append([x_[:,0,:],x_[:,-1,:]])
+    # y_history.append(y_[:,0,:],y_[:,-1,:])
+    
     for i in range(len(cost_op)):
       sub_self_loss  = sess.run([cost_op[i]])
       sub_cost = (sub_self_loss + step)[0] 
       # sub_cost = (sess.run([cost_op[i]]) + step)[0] 
       self_loss.append(sub_self_loss)
-      loss.append(step[0])
       cost.append(sub_cost)
+      
 
-    if debug_mode:
+    if debug_mode and (_ == num_unrolls-1):
       pdb.set_trace()
     # print(f'\nsub_cost:{np.mean(cost)} = sub_self_loss({np.mean(self_loss)}) + loss({np.mean(cost)-np.mean(self_loss)})')
-    print ('cost', np.mean(cost))
+    # print('\var1 his', var1_history)
+    # print('cost', cost)
+    # print('mean cost', np.mean(cost))
+    # print('min cost', np.min(cost))
     cost_all.append(cost)
-  return timer() - start, cost_all,  var2, step
+  return timer() - start, cost_all,  var2, x_history #, y_history
 
 
 def print_stats(header, total_error, total_time, n):

@@ -71,12 +71,14 @@ def quadratic(batch_size=128, num_dims=10, stddev=0.01, dtype=tf.float32):
                         shape=[batch_size, num_dims, num_dims],
                         dtype=dtype,
                         initializer=tf.random_uniform_initializer(),
+                        # initializer=tf.constant_initializer(1.0),
                         trainable=False)
     print(w.get_shape())
     y = tf.get_variable("y",
                         shape=[batch_size, num_dims],
                         dtype=dtype,
                         initializer=tf.random_uniform_initializer(),
+                        # initializer=tf.constant_initializer(0.5),
                         trainable=False)
     print(y.get_shape())
     product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
@@ -102,7 +104,14 @@ def square_cos(batch_size=128, num_dims=None,  stddev=0.01, dtype=tf.float32, mo
         shape=[batch_size, num_dims],
         dtype=dtype, 
         initializer=tf.random_uniform_initializer(-3, 3))
-      return ( tf.reduce_sum(x*x - 10*tf.math.cos(2*3.1415926*x), 1)+ 10*num_dims )
+      y = tf.get_variable("y",
+                    shape=[batch_size, num_dims],
+                    dtype=dtype,
+                    initializer=tf.random_normal_initializer(stddev=stddev/num_dims),
+                    # initializer=tf.random_uniform_initializer(-1, 1),
+                    # initializer=tf.constant_initializer(-1),
+                    trainable=False)
+      return ( tf.reduce_sum((x-y)*(x-y) - 10*tf.math.cos(2*3.1415926*(x-y)), 1)+ 10*num_dims )
 
 
 
@@ -111,7 +120,7 @@ def square_cos(batch_size=128, num_dims=None,  stddev=0.01, dtype=tf.float32, mo
         shape=[batch_size, num_dims],
         dtype=dtype,
         initializer=tf.random_uniform_initializer(-3, 3))
-
+    # x = x - 1.0
     # Non-trainable variables.
     w = tf.get_variable("w",
                         dtype=dtype,
@@ -122,8 +131,8 @@ def square_cos(batch_size=128, num_dims=None,  stddev=0.01, dtype=tf.float32, mo
                         shape=[batch_size, num_dims],
                         dtype=dtype,
                         initializer=tf.random_normal_initializer(stddev=stddev/num_dims),
+                        # initializer=tf.constant_initializer(-1.0)
                         trainable=False)
-
     wcos = tf.get_variable("wcos",
                         shape=[batch_size, num_dims],
                         dtype=dtype,

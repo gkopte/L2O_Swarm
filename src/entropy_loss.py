@@ -135,8 +135,18 @@ def self_loss (x, fx_array, n,im_loss_option):
 		print(first_instance)
 
 		#creating tensor for pso x and coping initial x to it
-		x_pso = tf.Variable(tf.zeros(tf.shape(first_instance)), dtype=tf.float32)
-		x_pso.assign(first_instance)
+		# x_pso = tf.Variable(tf.zeros(tf.shape(first_instance)), dtype=tf.float32)
+		# x_pso.assign(first_instance)
+
+		# Get the shape of the existing tensor
+		first_instance_shape = first_instance.shape
+		x_pso = tf.random.uniform(
+			first_instance_shape,
+			minval=-3, 
+			maxval=3, 
+		    name='x_pso',
+			dtype=tf.float32,
+		)	
 		
 		# building pso graph 
 		print('n: ', n)
@@ -144,7 +154,13 @@ def self_loss (x, fx_array, n,im_loss_option):
 		pso_.train()
 
 		# getting pso x history to calculate loss
-		pso_x_history = tf.reshape(pso_.x_history[1::], (batch_size, n, problem_dim))
+		# pso_x_history = tf.reshape(pso_.x_history[1::], (batch_size, n, problem_dim))
+
+		# Reshape the existing tensor to shape (1, 1, 5)
+		reshaped_g_best = tf.reshape(pso_.g, [1, 1, problem_dim])
+
+		# Repeat the tensor along the desired dimensions (128, 147, 5)
+		stacked_g_best = tf.tile(reshaped_g_best, [batch_size, n, 1])
 
 		def custom_loss(y_true, y_pred):
 			z = tf.abs(y_true - y_pred)
@@ -153,20 +169,55 @@ def self_loss (x, fx_array, n,im_loss_option):
 			return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
 		
 		if option=='custom':
-			im_loss = custom_loss(pso_x_history,x)
+			im_loss = custom_loss(stacked_g_best,x)
 		elif option=='rmse':
-			im_loss = tf.sqrt(tf.reduce_mean(tf.square(pso_x_history - x)))
+			im_loss = tf.sqrt(tf.reduce_mean(tf.square(stacked_g_best - x)))
 		elif option=='huber':
 			huber_loss = tf.keras.losses.Huber(delta=1.0)
-			im_loss = huber_loss(pso_x_history, x)
+			im_loss = huber_loss(stacked_g_best, x)
 		elif option=='mse': 
-			im_loss = tf.reduce_mean(tf.reduce_mean((pso_x_history - x)**2,0))
+			im_loss = tf.reduce_mean(tf.reduce_mean((stacked_g_best - x)**2,0))
 		else: #sumed square
-			im_loss = tf.reduce_sum(tf.reduce_sum((pso_x_history - x)**2,0))
+			im_loss = tf.reduce_sum(tf.reduce_sum((stacked_g_best - x)**2,0))
 		return im_loss
 	
 	# im_loss_option = 'mse'
+	def create_counter():
+		count = 0
+
+		def counter():
+			nonlocal count  # Declare count as nonlocal to modify its value inside the nested function
+			count += 1
+			return count
+
+		return counter
+
+	def explore_exploit_factor(step, max_steps, shape_factor=10, min_factor=0, max_factor=1):
+		"""
+		Generates a factor that balances exploration and exploitation for an optimization algorithm.
+		
+		:param step: Current step in the optimization process.
+		:param max_steps: Maximum number of steps in the optimization process.
+		:param shape_factor: Optional parameter to balance the shape of the logarithmic function.
+							Higher values make the function closer to an "L" shape.
+		:param min_factor: Minimum value for the exploration-exploitation factor.
+		:param max_factor: Maximum value for the exploration-exploitation factor.
+		:return: A factor between [min_factor, max_factor] that decays logarithmically.
+		"""
+		# Normalize the step value within the range [0, 1]
+		normalized_step = step / max_steps
+
+		# Calculate the exploration-exploitation factor using logarithmic decay
+		factor = 1 - np.log(1 + shape_factor * normalized_step) / np.log(1 + shape_factor)
+
+		# Scale the factor to be in the range [min_factor, max_factor]
+		scaled_factor = min_factor + (max_factor - min_factor) * factor
+
+		return scaled_factor
 	
+	# uniform_distribution = tf.random.uniform((1,), minval=0, maxval=10)
+	# Apply the logarithm function to transform the uniform distribution to a log uniform distribution
+	# k = tf.math.log(uniform_distribution)
 	k = 1.0 # imitation scaling factor
 	if im_loss_option=='mse':
 		im_loss = imitation_error(x, fx_array, n,'mse')
@@ -177,11 +228,17 @@ def self_loss (x, fx_array, n,im_loss_option):
 		im_loss = imitation_error(x, fx_array, n,'square')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
+		# counter = create_counter()
+		# step = counter()
+		# ca = explore_exploit_factor(step, 128, shape_factor=1000, min_factor=0, max_factor=1)
+		# return sumfx*(1-ca)+im_loss*ca
 		return sumfx+im_loss*k
 	elif im_loss_option=='rmse':
 		im_loss = imitation_error(x, fx_array, n,'rmse')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
+		# c = 0.2
+		# return sumfx*(1-c)+im_loss*c
 		return sumfx+im_loss*k
 	elif im_loss_option=='huber':
 		im_loss = imitation_error(x, fx_array, n,'huber')

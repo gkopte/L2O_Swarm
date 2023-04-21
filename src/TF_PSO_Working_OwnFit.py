@@ -7,6 +7,7 @@ import matplotlib.animation as animation
 import pdb
 import problems
 import copy
+import random
 
 
 np.random.seed(123)
@@ -138,41 +139,55 @@ def fitness_function():
         return square_cos(X,batch_size=batch_size,num_dims=dim,mode=mode)
     return f
 
-def square_cos(x,mode='train',batch_size=10,num_dims=2,dtype=tf.float32,stddev=0.01):
-    num_dims = 2
+def square_cos(x,mode='train',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0.01):
     # Trainable variable.
     if mode=='test':
+    #   x = x - 1.0
       return ( tf.reduce_sum(x*x - 10*tf.math.cos(2*3.1415926*x), 1)+ 10*num_dims )
-
+    # x = x - 1.0
     product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
     product2 = tf.reduce_sum(wcos*10*tf.math.cos(2*3.1415926*x), 1)
-
     #product3 = tf.reduce_sum((product - y) ** 2, 1) - tf.reduce_sum(product2, 1) + 10*num_dims
-
-    
     return (tf.reduce_sum((product - y) ** 2, 1)) - tf.reduce_mean(product2) + 10*num_dims
+
+def quadratic(x,mode='test',batch_size=10,num_dims=2,dtype=tf.float32,stddev=0.01):
+    """Quadratic problem: f(x) = ||Wx - y||. Builds loss graph."""
+    product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
+    return (tf.reduce_sum((product - y) ** 2, 1))
+
 
 
 if __name__ == '__main__':
-    pop_size = 10
-    dim = 2
-    n_iter = 128
+    pop_size = 7
+    dim = 5
+    n_iter = 250
+    n_epochs = 30
     x_val = tf.get_variable("x",shape=[pop_size,dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
     w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
+    # w = tf.get_variable("w", dtype=np.float32,initializer=tf.constant_initializer(1.0),trainable=False)
     y = tf.get_variable("y",shape=[pop_size, dim],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
+    # y = tf.get_variable("y",shape=[pop_size, dim],dtype=np.float32,initializer=tf.constant_initializer(-1.0),trainable=False)
     wcos = tf.get_variable("wcos",shape=[pop_size, dim],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
-
     with tf.Session() as sess:
-        opt = pso(fitness_fn=fitness_function(),pop_size=pop_size, dim=dim, n_iter=n_iter,x_init=x_val)
-        sess.run(tf.global_variables_initializer())
-        opt.train()
-        print(sess.run(opt.fit_history))
-        print(sess.run(opt.x))
-        # print(sess.run(opt.x_history))
-        # print(opt.f_p)
-    # print(opt.fit_history)
-    ## Define the grid for future plotting:
+        for i in range(n_epochs):
+        
+            print('Epoch ', i)
+            seed_value = random.randint(0, 100)
+            tf.set_random_seed(seed_value)
 
-
-    # anim = animation.FuncAnimation(fig,snapshot,frames=60)
-    # anim.save("PSO_tensorflow.mp4", fps=6)
+        
+            
+            opt = pso(fitness_fn=fitness_function(),pop_size=pop_size, dim=dim, n_iter=n_iter,x_init=x_val)
+            sess.run(tf.global_variables_initializer())
+            opt.train()
+            # print(sess.run(opt.fit_history))
+            print('final cost:', min(sess.run(opt.fit_history)))
+            # print(sess.run(opt.x))
+            # print(sess.run(opt.x_history))
+            # print(opt.f_p)
+        # print(opt.fit_history)
+        ## Define the grid for future plotting:
+        
+        
+        # anim = animation.FuncAnimation(fig,snapshot,frames=60)
+        # anim.save("PSO_tensorflow.mp4", fps=6)

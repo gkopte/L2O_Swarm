@@ -22,6 +22,7 @@ debug_mode = False
 
 
 FLAGS = flags.FLAGS
+flags.DEFINE_string("pre_trained_path", None, "Path for pre trained meta-optimizer.")
 flags.DEFINE_string("save_path", None, "Path for saved meta-optimizer.")
 flags.DEFINE_integer("num_epochs", 1000, "Number of training epochs.")
 flags.DEFINE_integer("log_period", 100, "Log period.")
@@ -37,11 +38,18 @@ flags.DEFINE_boolean("second_derivatives", False, "Use second derivatives.")
 flags.DEFINE_string("im_loss_option", "mse", "function used in the imitation learning loss")
 
 
-
 def main(_):
+
   # Configuration.
   num_unrolls = FLAGS.num_steps // FLAGS.unroll_length
-  problem, net_config, net_assignments = util.get_config(FLAGS.problem)
+
+  if FLAGS.pre_trained_path is None:
+    problem, net_config, net_assignments = util.get_config(FLAGS.problem)
+  else:
+    print('PRE TRAINED MODEL PATH: ', FLAGS.pre_trained_path)
+    problem, net_config, net_assignments = util.get_config(FLAGS.problem,
+                                                        FLAGS.pre_trained_path)
+    
   optimizer = meta.MetaOptimizer(FLAGS.problem, FLAGS.num_particle ,**net_config)
   if FLAGS.save_path is not None:
     if not os.path.exists(FLAGS.save_path):
