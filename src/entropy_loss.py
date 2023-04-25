@@ -138,10 +138,8 @@ def self_loss (x, fx_array, n,im_loss_option):
 		x_pso = tf.Variable(tf.zeros(tf.shape(first_instance)), dtype=tf.float32)
 		x_pso.assign(first_instance)
 
-		x_last = tf.Variable(tf.zeros(tf.shape(x)), dtype=tf.float32)
+		# x_last = tf.Variable(tf.zeros(tf.shape(x)), dtype=tf.float32)
 		x_pso_hist_last = tf.Variable(tf.zeros(tf.shape(x)), dtype=tf.float32)
-		x_vel = tf.Variable(tf.zeros(tf.shape(x)), dtype=tf.float32)
-		# vel_pso_x_history = tf.Variable(tf.zeros(tf.shape(x)), dtype=tf.float32)
 		
 		# building pso graph 
 		print('n: ', n)
@@ -150,10 +148,7 @@ def self_loss (x, fx_array, n,im_loss_option):
 
 		# getting pso x history to calculate loss
 		pso_x_history = tf.reshape(pso_.x_history[1::], (batch_size, n, problem_dim))
-
-		# velocity calculation
 		vel_pso_x_history = tf.stop_gradient(pso_x_history) - tf.stop_gradient(x_pso_hist_last)
-		x_vel = tf.stop_gradient(x) - x_last
 
 		def custom_loss(y_true, y_pred):
 			z = tf.abs(y_true - y_pred)
@@ -162,19 +157,18 @@ def self_loss (x, fx_array, n,im_loss_option):
 			return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
 		
 		if option=='custom':
-			im_loss = custom_loss(vel_pso_x_history, x_vel)
+			im_loss = custom_loss(vel_pso_x_history,x)
 		elif option=='rmse':
-			im_loss = tf.sqrt(tf.reduce_mean(tf.square(vel_pso_x_history - x_vel)))
+			im_loss = tf.sqrt(tf.reduce_mean(tf.square(vel_pso_x_history - x)))
 		elif option=='huber':
 			huber_loss = tf.keras.losses.Huber(delta=1.0)
-			im_loss = huber_loss(vel_pso_x_history, x_vel)
+			im_loss = huber_loss(vel_pso_x_history, x)
 		elif option=='mse': 
-			im_loss = tf.reduce_mean(tf.reduce_mean((vel_pso_x_history - x_vel)**2,0))
+			im_loss = tf.reduce_mean(tf.reduce_mean((vel_pso_x_history - x)**2,0))
 		else: #sumed square
-			im_loss = tf.reduce_sum(tf.reduce_sum((vel_pso_x_history - x_vel)**2,0))
+			im_loss = tf.reduce_sum(tf.reduce_sum((vel_pso_x_history - x)**2,0))
 		
 		x_pso_hist_last.assign(pso_x_history)
-		x_last.assign(x)
 		return im_loss
 	
 	# im_loss_option = 'mse'
@@ -247,7 +241,7 @@ def self_loss (x, fx_array, n,im_loss_option):
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
 	elif im_loss_option=='only_im':
-		im_loss = imitation_error(x, fx_array, n,'mse')
+		im_loss = imitation_error(x, fx_array, n,'square')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return im_loss*k
