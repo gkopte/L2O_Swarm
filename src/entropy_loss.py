@@ -129,85 +129,65 @@ def self_loss (x, fx_array, n,im_loss_option):
 		print('imitation_error option: ',option)
 		print("x shape:", x.shape)
 
-		# gettinng initial x for this unroll
-		first_instance = tf.slice(x, [0, 0, 0], [1, n,problem_dim])
-		first_instance = tf.squeeze(first_instance)
-		print(first_instance)
+		num_particle = 7
+		x_shape = tf.shape(x)
 
-		#creating tensor for pso x and coping initial x to it
-		x_pso = tf.Variable(tf.zeros(tf.shape(first_instance)), dtype=tf.float32)
-		x_pso.assign(first_instance)
-
-		# x_last = tf.Variable(tf.zeros(tf.shape(x)), dtype=tf.float32)
-		x_pso_hist_last = tf.Variable(tf.zeros(tf.shape(x)), dtype=tf.float32)
+		with tf.Session() as sess:
+			batch_size = x_shape[0].eval() 
+			unroll_and_part = x_shape[1].eval()
+			dim = x_shape[2].eval()
+			
+		unroll_length = unroll_and_part//num_particle
+			
 		
-		# building pso graph 
-		print('n: ', n)
-		pso_ = TF_PSO_Working_OwnFit.pso(fitness_fn=TF_PSO_Working_OwnFit.fitness_function(),pop_size=n, dim=problem_dim, n_iter=batch_size,x_init=x_pso)
-		pso_.train()
+		im_loss  = tf.constant(0, dtype=tf.float32)
+		# im_loss = tf.get_variable("im_loss",shape=[], dtype=tf.float32, initializer=tf.constant_initializer(0),trainable=False)
+		for batch in range(batch_size):
+			
+			x_batch = tf.slice(x, [tf.stop_gradient(batch), 0, 0], [1, unroll_and_part, dim])
+			x_batch = tf.squeeze(x_batch)
+			x_batch  = tf.reshape(x_batch, [unroll_length, num_particle, dim])
+			# gettinng initial x for this unroll
+			init_x_batch = tf.slice(x_batch, [0, 0, 0], [1, num_particle, dim])
+			init_x_batch = tf.squeeze(init_x_batch)
 
-		# getting pso x history to calculate loss
-		pso_x_history = tf.reshape(pso_.x_history[1::], (batch_size, n, problem_dim))
-		vel_pso_x_history = tf.stop_gradient(pso_x_history) - tf.stop_gradient(x_pso_hist_last)
+			# print(init_x_batch)
 
-		def custom_loss(y_true, y_pred):
-			z = tf.abs(y_true - y_pred)
-			quadratic = tf.maximum(1.0, z)**2
-			absolute = tf.minimum(1.0, z)
-			return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
-		
-		if option=='custom':
-			im_loss = custom_loss(vel_pso_x_history,x)
-		elif option=='rmse':
-			im_loss = tf.sqrt(tf.reduce_mean(tf.square(vel_pso_x_history - x)))
-		elif option=='huber':
-			huber_loss = tf.keras.losses.Huber(delta=1.0)
-			im_loss = huber_loss(vel_pso_x_history, x)
-		elif option=='mse': 
-			im_loss = tf.reduce_mean(tf.reduce_mean((vel_pso_x_history - x)**2,0))
-		else: #sumed square
-			im_loss = tf.reduce_sum(tf.reduce_sum((vel_pso_x_history - x)**2,0))
-		
-		x_pso_hist_last.assign(pso_x_history)
-		return im_loss
+			# #creating tensor for pso x and coping initial x to it
+			# x_pso = tf.Variable(tf.zeros(tf.shape(first_instance)), dtype=tf.float32)
+			# x_pso.assign(first_instance)
+			
+			# building pso graph 
+			pso_ = TF_PSO_Working_OwnFit.pso(fitness_fn=TF_PSO_Working_OwnFit.fitness_function(),pop_size=num_particle, dim=dim, n_iter=unroll_length,x_init=init_x_batch)
+			pso_.train()
+
+			# getting pso x history to calculate loss
+			pso_x_history = tf.reshape(pso_.x_history[1::], (unroll_length, num_particle, dim))
+			pso_x_history_detached = tf.stop_gradient(pso_x_history)
+			# print(pso_x_history)
+
+			def custom_loss(y_true, y_pred):
+				z = tf.abs(y_true - y_pred)
+				quadratic = tf.maximum(1.0, z)**2
+				absolute = tf.minimum(1.0, z)
+				return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
+			
+			if option=='custom':
+				im_loss += custom_loss(pso_x_history_detached, x_batch)
+			elif option=='rmse':
+				im_loss += tf.sqrt(tf.reduce_mean(tf.square(pso_x_history_detached - x_batch)))
+			elif option=='huber':
+				huber_loss = tf.keras.losses.Huber(delta=1.0)
+				im_loss += huber_loss(pso_x_history_detached, x_batch)
+			elif option=='mse': 
+				im_loss += tf.reduce_mean(tf.reduce_mean((pso_x_history_detached - x_batch)**2,0))
+			else: #sumed square
+				im_loss += tf.reduce_sum(tf.reduce_sum((pso_x_history_detached - x_batch)**2,0))
+
+		return im_loss/batch_size
 	
 	# im_loss_option = 'mse'
-	def create_counter():
-		count = 0
-
-		def counter():
-			nonlocal count  # Declare count as nonlocal to modify its value inside the nested function
-			count += 1
-			return count
-
-		return counter
-
-	def explore_exploit_factor(step, max_steps, shape_factor=10, min_factor=0, max_factor=1):
-		"""
-		Generates a factor that balances exploration and exploitation for an optimization algorithm.
-		
-		:param step: Current step in the optimization process.
-		:param max_steps: Maximum number of steps in the optimization process.
-		:param shape_factor: Optional parameter to balance the shape of the logarithmic function.
-							Higher values make the function closer to an "L" shape.
-		:param min_factor: Minimum value for the exploration-exploitation factor.
-		:param max_factor: Maximum value for the exploration-exploitation factor.
-		:return: A factor between [min_factor, max_factor] that decays logarithmically.
-		"""
-		# Normalize the step value within the range [0, 1]
-		normalized_step = step / max_steps
-
-		# Calculate the exploration-exploitation factor using logarithmic decay
-		factor = 1 - np.log(1 + shape_factor * normalized_step) / np.log(1 + shape_factor)
-
-		# Scale the factor to be in the range [min_factor, max_factor]
-		scaled_factor = min_factor + (max_factor - min_factor) * factor
-
-		return scaled_factor
 	
-	# uniform_distribution = tf.random.uniform((1,), minval=0, maxval=10)
-	# Apply the logarithm function to transform the uniform distribution to a log uniform distribution
-	# k = tf.math.log(uniform_distribution)
 	k = 1.0 # imitation scaling factor
 	if im_loss_option=='mse':
 		im_loss = imitation_error(x, fx_array, n,'mse')
@@ -218,17 +198,11 @@ def self_loss (x, fx_array, n,im_loss_option):
 		im_loss = imitation_error(x, fx_array, n,'square')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
-		# counter = create_counter()
-		# step = counter()
-		# ca = explore_exploit_factor(step, 128, shape_factor=1000, min_factor=0, max_factor=1)
-		# return sumfx*(1-ca)+im_loss*ca
 		return sumfx+im_loss*k
 	elif im_loss_option=='rmse':
 		im_loss = imitation_error(x, fx_array, n,'rmse')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
-		# c = 0.2
-		# return sumfx*(1-c)+im_loss*c
 		return sumfx+im_loss*k
 	elif im_loss_option=='huber':
 		im_loss = imitation_error(x, fx_array, n,'huber')
@@ -241,7 +215,7 @@ def self_loss (x, fx_array, n,im_loss_option):
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
 	elif im_loss_option=='only_im':
-		im_loss = imitation_error(x, fx_array, n,'square')
+		im_loss = imitation_error(x, fx_array, n,'mse')
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return im_loss*k
