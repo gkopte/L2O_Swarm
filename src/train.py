@@ -8,6 +8,7 @@ import os
 import pickle
 from six.moves import xrange
 import tensorflow as tf
+# tf.enable_eager_execution()
 import numpy as np
 from tensorflow.contrib.learn.python.learn import monitored_session as ms
 from tensorflow.python import debug as tf_debug

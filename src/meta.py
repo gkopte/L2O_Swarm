@@ -734,7 +734,7 @@ class MetaOptimizer(object):
 
 
     print (x[0].shape, x_final[0].shape,  len(fx_final),'xinfal11', len_unroll)
-    
+
     loss = entropy_loss.self_loss(x_array.stack(), fx_array.stack(), (len_unroll + 1)*self.num_lstm, im_loss_option)
     #loss = tf.reduce_mean(tf.reduce_sum(fx_array.stack(), -1))
     # print (loss.shape)

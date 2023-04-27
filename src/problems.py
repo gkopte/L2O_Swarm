@@ -53,7 +53,7 @@ def simple_multi_optimizer(num_dims=2):
   return build
 
 
-def quadratic(batch_size=128, num_dims=10, stddev=0.01, dtype=tf.float32):
+def quadratic(batch_size=128, num_dims=5, stddev=0.01, dtype=tf.float32):
   """Quadratic problem: f(x) = ||Wx - y||."""
 
   def build():

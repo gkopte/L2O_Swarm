@@ -150,7 +150,7 @@ def square_cos(x,mode='train',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0
     #product3 = tf.reduce_sum((product - y) ** 2, 1) - tf.reduce_sum(product2, 1) + 10*num_dims
     return (tf.reduce_sum((product - y) ** 2, 1)) - tf.reduce_mean(product2) + 10*num_dims
 
-def quadratic(x,mode='test',batch_size=10,num_dims=2,dtype=tf.float32,stddev=0.01):
+def quadratic(x,mode='test',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0.01):
     """Quadratic problem: f(x) = ||Wx - y||. Builds loss graph."""
     product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
     return (tf.reduce_sum((product - y) ** 2, 1))
@@ -163,7 +163,13 @@ if __name__ == '__main__':
     n_iter = 250
     n_epochs = 30
     x_val = tf.get_variable("x",shape=[pop_size,dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
-    w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
+    # w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
+    w = tf.get_variable("w",
+                    shape=[1, dim, dim],
+                    dtype=np.float32,
+                    initializer=tf.random_uniform_initializer(),
+                    # initializer=tf.constant_initializer(1.0),
+                    trainable=False)
     # w = tf.get_variable("w", dtype=np.float32,initializer=tf.constant_initializer(1.0),trainable=False)
     y = tf.get_variable("y",shape=[pop_size, dim],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
     # y = tf.get_variable("y",shape=[pop_size, dim],dtype=np.float32,initializer=tf.constant_initializer(-1.0),trainable=False)
