@@ -46,7 +46,7 @@ dependencies:
     - sklearn==0.0
     - tensorboard==1.13.1
     - tensorflow==1.13.1
-    - tensorflow-gpu==1.14
+    - tensorflow-gpu==1.13.1
     - tensorflow-estimator==1.13.0
     - termcolor==1.1.0
     - werkzeug==0.15.4
