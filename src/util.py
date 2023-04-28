@@ -66,7 +66,7 @@ def eval_run_epoch(sess, cost_op, ops, reset, num_unrolls, var1, var2):
     # print('\var1 his', var1_history)
     # print('cost', cost)
     # print('mean cost', np.mean(cost))
-    # print('min cost', np.min(cost))
+    print('min cost', np.min(cost))
     cost_all.append(cost)
   return timer() - start, cost_all,  var2, x_history #, y_history
 
