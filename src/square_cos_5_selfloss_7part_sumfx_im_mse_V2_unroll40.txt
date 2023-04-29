@@ -1,0 +1,195 @@
+[<tf.Variable 'x:0' shape=(128, 5) dtype=float32_ref>] [<tf.Variable 'w:0' shape=(128, 5, 5) dtype=float32_ref>, <tf.Variable 'y:0' shape=(128, 5) dtype=float32_ref>, <tf.Variable 'wcos:0' shape=(128, 5) dtype=float32_ref>]
+(1, 640)
+(10, 1280)
+(128, 5, 5)
+(7, 128, 5, 5)
+(128, 5)
+(7, 128, 5)
+(128, 5)
+(7, 128, 5)
+(128, 5)
+(7, 128, 5)
+(128, 5)
+(7, 128, 5)
+(128, 5)
+(7, 128, 5)
+x.length 1 (7, 128, 5) <class 'tensorflow.python.ops.variables.RefVariable'>
+Optimizee variables
+['x:0']
+Problem variables
+['w:0', 'y:0', 'wcos:0']
+[<tf.Tensor 'unroll/fx/gradients/AddN:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/gradients_1/AddN:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/gradients_2/AddN:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/gradients_3/AddN:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/gradients_4/AddN:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/gradients_5/AddN:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/gradients_6/AddN:0' shape=(128, 5) dtype=float32>]
+[[<tf.Tensor 'unroll/fx/gradients/AddN:0' shape=(128, 5) dtype=float32>], [<tf.Tensor 'unroll/fx/gradients_1/AddN:0' shape=(128, 5) dtype=float32>], [<tf.Tensor 'unroll/fx/gradients_2/AddN:0' shape=(128, 5) dtype=float32>], [<tf.Tensor 'unroll/fx/gradients_3/AddN:0' shape=(128, 5) dtype=float32>], [<tf.Tensor 'unroll/fx/gradients_4/AddN:0' shape=(128, 5) dtype=float32>], [<tf.Tensor 'unroll/fx/gradients_5/AddN:0' shape=(128, 5) dtype=float32>], [<tf.Tensor 'unroll/fx/gradients_6/AddN:0' shape=(128, 5) dtype=float32>]]
+[<tf.Tensor 'unroll/fx/stack:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/fx/Select:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_1:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_1:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_2:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_1:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_2:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_3:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_1:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_2:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_3:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_4:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_1:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_2:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_3:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_4:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_5:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_1:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_2:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_3:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_4:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_5:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_6:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_1:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_2:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_3:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_4:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_5:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_6:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_7:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_7:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_8:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_7:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_8:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_9:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_7:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_8:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_9:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_10:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_7:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_8:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_9:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_10:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_11:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_7:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_8:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_9:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_10:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_11:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_12:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_7:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_8:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_9:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_10:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_11:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_12:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_13:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_7:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_8:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_9:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_10:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_11:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_12:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_13:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_2:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_14:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_14:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_15:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_14:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_15:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_16:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_14:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_15:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_16:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_17:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_14:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_15:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_16:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_17:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_18:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_14:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_15:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_16:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_17:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_18:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_19:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_14:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_15:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_16:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_17:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_18:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_19:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_20:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_14:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_15:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_16:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_17:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_18:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_19:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_20:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_2:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_3:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_21:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_21:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_22:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_21:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_22:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_23:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_21:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_22:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_23:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_24:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_21:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_22:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_23:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_24:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_25:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_21:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_22:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_23:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_24:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_25:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_26:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_21:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_22:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_23:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_24:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_25:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_26:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_27:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_21:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_22:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_23:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_24:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_25:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_26:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_27:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_2:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_3:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_4:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_28:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_28:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_29:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_28:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_29:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_30:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_28:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_29:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_30:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_31:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_28:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_29:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_30:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_31:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_32:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_28:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_29:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_30:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_31:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_32:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_33:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_28:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_29:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_30:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_31:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_32:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_33:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_34:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_28:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_29:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_30:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_31:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_32:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_33:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_34:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_2:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_3:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_4:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_5:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_35:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_35:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_36:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_35:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_36:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_37:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_35:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_36:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_37:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_38:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_35:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_36:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_37:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_38:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_39:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_35:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_36:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_37:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_38:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_39:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_40:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_35:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_36:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_37:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_38:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_39:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_40:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_41:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_35:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_36:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_37:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_38:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_39:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_40:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_41:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_2:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_3:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_4:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_5:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_6:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_42:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_42:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_43:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_42:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_43:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_44:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_42:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_43:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_44:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_45:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_42:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_43:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_44:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_45:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_46:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_42:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_43:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_44:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_45:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_46:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_47:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_42:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_43:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_44:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_45:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_46:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_47:0' shape=(128, 5) dtype=float32>]
+Tensor("unroll/fx/Select_48:0", shape=(128, 5), dtype=float32)
+[<tf.Tensor 'unroll/fx/Select_42:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_43:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_44:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_45:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_46:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_47:0' shape=(128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/Select_48:0' shape=(128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_2:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_3:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_4:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_5:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_6:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_7:0' shape=(7, 128, 5) dtype=float32>]
+[[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_2:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_3:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_4:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_5:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_6:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_7:0' shape=(7, 128, 5) dtype=float32>]]
+[[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_2:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_3:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_4:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_5:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_6:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_7:0' shape=(7, 128, 5) dtype=float32>]]
+[<tf.Tensor 'unroll/fx/stack_1:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_2:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_3:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_4:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_5:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_6:0' shape=(7, 128, 5) dtype=float32>, <tf.Tensor 'unroll/fx/stack_7:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/fx/stack_1:0", shape=(7, 128, 5), dtype=float32)
+Tensor("unroll/dx/Reshape:0", shape=(7, 640), dtype=float32)
+Tensor("unroll/dx/Sum:0", shape=(7,), dtype=float32)
+Tensor("unroll/dx/mul_1:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/dx/Softmax:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/fx/stack_2:0", shape=(7, 128, 5), dtype=float32)
+Tensor("unroll/dx/Reshape_2:0", shape=(7, 640), dtype=float32)
+Tensor("unroll/dx/Sum_1:0", shape=(7,), dtype=float32)
+Tensor("unroll/dx/mul_3:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/dx/Softmax_1:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/fx/stack_3:0", shape=(7, 128, 5), dtype=float32)
+Tensor("unroll/dx/Reshape_4:0", shape=(7, 640), dtype=float32)
+Tensor("unroll/dx/Sum_2:0", shape=(7,), dtype=float32)
+Tensor("unroll/dx/mul_5:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/dx/Softmax_2:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/fx/stack_4:0", shape=(7, 128, 5), dtype=float32)
+Tensor("unroll/dx/Reshape_6:0", shape=(7, 640), dtype=float32)
+Tensor("unroll/dx/Sum_3:0", shape=(7,), dtype=float32)
+Tensor("unroll/dx/mul_7:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/dx/Softmax_3:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/fx/stack_5:0", shape=(7, 128, 5), dtype=float32)
+Tensor("unroll/dx/Reshape_8:0", shape=(7, 640), dtype=float32)
+Tensor("unroll/dx/Sum_4:0", shape=(7,), dtype=float32)
+Tensor("unroll/dx/mul_9:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/dx/Softmax_4:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/fx/stack_6:0", shape=(7, 128, 5), dtype=float32)
+Tensor("unroll/dx/Reshape_10:0", shape=(7, 640), dtype=float32)
+Tensor("unroll/dx/Sum_5:0", shape=(7,), dtype=float32)
+Tensor("unroll/dx/mul_11:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/dx/Softmax_5:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/fx/stack_7:0", shape=(7, 128, 5), dtype=float32)
+Tensor("unroll/dx/Reshape_12:0", shape=(7, 640), dtype=float32)
+Tensor("unroll/dx/Sum_6:0", shape=(7,), dtype=float32)
+Tensor("unroll/dx/mul_13:0", shape=(1, 7), dtype=float32)
+Tensor("unroll/dx/Softmax_6:0", shape=(1, 7), dtype=float32)
+[<tf.Tensor 'unroll/dx/MatMul:0' shape=(1, 640) dtype=float32>, <tf.Tensor 'unroll/dx/MatMul_1:0' shape=(1, 640) dtype=float32>, <tf.Tensor 'unroll/dx/MatMul_2:0' shape=(1, 640) dtype=float32>, <tf.Tensor 'unroll/dx/MatMul_3:0' shape=(1, 640) dtype=float32>, <tf.Tensor 'unroll/dx/MatMul_4:0' shape=(1, 640) dtype=float32>, <tf.Tensor 'unroll/dx/MatMul_5:0' shape=(1, 640) dtype=float32>, <tf.Tensor 'unroll/dx/MatMul_6:0' shape=(1, 640) dtype=float32>]
+Tensor("unroll/dx/Reshape_14:0", shape=(7, 128, 5), dtype=float32)
+[<tf.Tensor 'unroll/dx/Reshape_14:0' shape=(7, 128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/Identity_2:0' shape=(7, 128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/dx/gradients/StopGradient:0' shape=(7, 128, 5) dtype=float32>]
+[<tf.Tensor 'unroll/dx/gradients/StopGradient:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/dx/inter_attention/Reshape:0", shape=(7, 640), dtype=float32)
+Tensor("unroll/dx/inter_attention/Reshape_1:0", shape=(7, 640), dtype=float32)
+Tensor("unroll/dx/inter_attention/MatMul:0", shape=(7, 7), dtype=float32)
+Tensor("unroll/dx/inter_attention/Softmax:0", shape=(7, 7), dtype=float32)
+Tensor("unroll/dx/inter_attention/mul:0", shape=(7, 7), dtype=float32)
+Tensor("unroll/dx/inter_attention/Softmax_1:0", shape=(7, 7), dtype=float32)
+Tensor("unroll/dx/inter_attention/Add:0", shape=(7, 640), dtype=float32)
+mnist_gradients [<tf.Tensor 'unroll/dx/inter_attention/Reshape_2:0' shape=(7, 128, 5) dtype=float32>]
+Tensor("unroll/dx/deltas/Reshape:0", shape=(28, 640), dtype=float32)
+Tensor("unroll/dx/deltas/Reshape_1:0", shape=(28, 640), dtype=float32)
+Tensor("unroll/dx/deltas/concat_2:0", shape=(28, 1280), dtype=float32)
+Tensor("unroll/dx/deltas/Tile:0", shape=(10, 28), dtype=float32)
+Tensor("unroll/dx/deltas/Tanh:0", shape=(10, 28), dtype=float32)
+<tf.Variable 'Variable_3:0' shape=(1, 10) dtype=float32_ref>
+Tensor("unroll/dx/deltas/MatMul_1:0", shape=(1, 28), dtype=float32)
+Tensor("unroll/dx/deltas/Softmax:0", shape=(7, 4), dtype=float32)
+Tensor("unroll/dx/deltas/Reshape_3:0", shape=(28, 1), dtype=float32)
