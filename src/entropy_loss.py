@@ -163,7 +163,8 @@ def self_loss (x, fx_array, n,im_loss_option):
 
 			# getting pso x history to calculate loss
 			pso_x_history = tf.reshape(pso_.x_history[1::], (unroll_length, num_particle, dim))
-			pso_x_history_detached = tf.stop_gradient(pso_x_history)
+			pso_x_vel_detached = 100*(pso_x_history[1:] - pso_x_history[:-1])
+			x_batch_vel_detached = 100*(x_batch[1:] - x_batch[:-1])
 			# print(pso_x_history)
 
 			def custom_loss(y_true, y_pred):
@@ -171,18 +172,18 @@ def self_loss (x, fx_array, n,im_loss_option):
 				quadratic = tf.maximum(1.0, z)**2
 				absolute = tf.minimum(1.0, z)
 				return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
-			
+			# tf.stop_gradient(
 			if option=='custom':
-				im_loss += custom_loss(pso_x_history_detached, x_batch)
+				im_loss += custom_loss(pso_x_vel_detached, x_batch_vel_detached)
 			elif option=='rmse':
-				im_loss += tf.sqrt(tf.reduce_mean(tf.square(pso_x_history_detached - x_batch)))
+				im_loss += tf.sqrt(tf.reduce_mean(tf.square(pso_x_vel_detached - x_batch_vel_detached)))
 			elif option=='huber':
 				huber_loss = tf.keras.losses.Huber(delta=1.0)
-				im_loss += huber_loss(pso_x_history_detached, x_batch)
+				im_loss += huber_loss(pso_x_vel_detached, x_batch_vel_detached)
 			elif option=='mse': 
-				im_loss += tf.reduce_mean(tf.reduce_mean((pso_x_history_detached - x_batch)**2,0))
+				im_loss += tf.reduce_mean(tf.reduce_mean((pso_x_vel_detached - x_batch_vel_detached)**2,0))
 			else: #sumed square
-				im_loss += tf.reduce_sum(tf.reduce_sum((pso_x_history_detached - x_batch)**2,0))
+				im_loss += tf.reduce_sum(tf.reduce_sum((pso_x_vel_detached - x_batch_vel_detached)**2,0))
 
 		return im_loss/batch_size
 	
