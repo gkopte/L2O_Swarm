@@ -125,9 +125,10 @@ def self_loss (x, fx_array, n,im_loss_option):
 	h0 = entropy(x, fx_array,  [preh,0])
 	h  = entropy(x, fx_array,  [h0,1])
 
-	def imitation_error(x, fx_array, n, option=''):
+	def imitation_error(x, fx_array, n, option='', vel=False):
 		print('imitation_error option: ',option)
 		print("x shape:", x.shape)
+		print("vel: ", vel)
 
 		num_particle = 7
 		x_shape = tf.shape(x)
@@ -163,8 +164,11 @@ def self_loss (x, fx_array, n,im_loss_option):
 
 			# getting pso x history to calculate loss
 			pso_x_history = tf.reshape(pso_.x_history[1::], (unroll_length, num_particle, dim))
-			pso_x_vel_detached = 100*(pso_x_history[1:] - pso_x_history[:-1])
-			x_batch_vel_detached = 100*(x_batch[1:] - x_batch[:-1])
+
+			if vel:
+				pso_x_history = 100*(pso_x_history[1:] - pso_x_history[:-1])
+				x_batch = 100*(x_batch[1:] - x_batch[:-1])
+
 			# print(pso_x_history)
 
 			def custom_loss(y_true, y_pred):
@@ -174,49 +178,55 @@ def self_loss (x, fx_array, n,im_loss_option):
 				return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
 			# tf.stop_gradient(
 			if option=='custom':
-				im_loss += custom_loss(pso_x_vel_detached, x_batch_vel_detached)
+				im_loss += custom_loss(pso_x_history, x_batch)
 			elif option=='rmse':
-				im_loss += tf.sqrt(tf.reduce_mean(tf.square(pso_x_vel_detached - x_batch_vel_detached)))
+				im_loss += tf.sqrt(tf.reduce_mean(tf.square(pso_x_history - x_batch)))
 			elif option=='huber':
 				huber_loss = tf.keras.losses.Huber(delta=1.0)
-				im_loss += huber_loss(pso_x_vel_detached, x_batch_vel_detached)
+				im_loss += huber_loss(pso_x_history, x_batch)
 			elif option=='mse': 
-				im_loss += tf.reduce_mean(tf.reduce_mean((pso_x_vel_detached - x_batch_vel_detached)**2,0))
+				im_loss += tf.reduce_mean(tf.reduce_mean((pso_x_history - x_batch)**2,0))
 			else: #sumed square
-				im_loss += tf.reduce_sum(tf.reduce_sum((pso_x_vel_detached - x_batch_vel_detached)**2,0))
+				im_loss += tf.reduce_sum(tf.reduce_sum((pso_x_history - x_batch)**2,0))
 
 		return im_loss/batch_size
 	
 	# im_loss_option = 'mse'
+	start_index = len(im_loss_option)-4
+	if im_loss_option[start_index:] == "_vel":
+		vel = True
+		im_loss_option = im_loss_option[:start_index]
+	else:
+		vel = False
 	
 	k = 1.0 # imitation scaling factor
 	if im_loss_option=='mse':
-		im_loss = imitation_error(x, fx_array, n,'mse')
+		im_loss = imitation_error(x, fx_array, n,'mse', vel)
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
 	elif im_loss_option=='square':
-		im_loss = imitation_error(x, fx_array, n,'square')
+		im_loss = imitation_error(x, fx_array, n,'square', vel)
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
 	elif im_loss_option=='rmse':
-		im_loss = imitation_error(x, fx_array, n,'rmse')
+		im_loss = imitation_error(x, fx_array, n,'rmse', vel)
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
 	elif im_loss_option=='huber':
-		im_loss = imitation_error(x, fx_array, n,'huber')
+		im_loss = imitation_error(x, fx_array, n,'huber', vel)
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
 	elif im_loss_option=='custom':
-		im_loss = imitation_error(x, fx_array, n,'custom')
+		im_loss = imitation_error(x, fx_array, n,'custom', vel)
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+im_loss*k
 	elif im_loss_option=='only_im':
-		im_loss = imitation_error(x, fx_array, n,'mse')
+		im_loss = imitation_error(x, fx_array, n,'mse', vel)
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return im_loss*k
@@ -224,7 +234,7 @@ def self_loss (x, fx_array, n,im_loss_option):
 		print("sumfx shape:", sumfx.shape)
 		return sumfx
 	elif im_loss_option=='entropy_im':
-		im_loss = imitation_error(x, fx_array, n,'square')
+		im_loss = imitation_error(x, fx_array, n,'square', vel)
 		print("im_loss shape:", im_loss.shape)
 		print("sumfx shape:", sumfx.shape)
 		return sumfx+lam*h+im_loss*k
