@@ -167,7 +167,7 @@ def self_loss (x, fx_array, n,im_loss_option):
 
 			if vel:
 				pso_x_history = 100*(pso_x_history[1:] - pso_x_history[:-1])
-				x_batch = 100*(x_batch[1:] - x_batch[:-1])
+				x_batch = 1*(x_batch[1:] - x_batch[:-1])
 
 			# print(pso_x_history)
 
