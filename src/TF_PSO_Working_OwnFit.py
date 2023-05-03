@@ -25,8 +25,8 @@ class pso:
         dim=2,
         n_iter=200,
         b=0.9,
-        c1=2, # c1=0.8,
-        c2=2, #c2=0.5,
+        c1=0.8,
+        c2=0.5,
         x_min=-1,
         x_max=1,
         x_init = None
