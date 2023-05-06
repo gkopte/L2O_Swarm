@@ -8,6 +8,7 @@ import tensorflow as tf
 
 from tensorflow.contrib.learn.python.learn import monitored_session as ms
 
+import math
 import meta
 import util
 import os
@@ -15,6 +16,30 @@ import pickle
 import pdb
 import random
 from tensorflow.python import debug as tf_debug
+import mlflow
+import mlflow.tensorflow
+from mlflow.tracking import MlflowClient
+
+client = MlflowClient()
+
+experiment_name = "experiment_test1"
+
+# Get the experiment by name
+experiment = client.get_experiment_by_name(experiment_name)
+
+# If the experiment exists and is deleted, restore it
+if experiment and experiment.lifecycle_stage == "deleted":
+    client.restore_experiment(experiment.experiment_id)
+
+# Set the restored experiment as the active experiment
+mlflow.set_experiment(experiment_name)
+
+
+
+mlflow.start_run()
+
+
+
 flags = tf.flags
 logging = tf.logging
 
@@ -32,6 +57,15 @@ flags.DEFINE_integer("num_steps", 250,
 flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
 flags.DEFINE_string("im_loss_option", "",
                     "function used in the imitation learning loss")
+
+mlflow.set_tag("mlflow.runName", str(FLAGS.path))
+mlflow.log_param("optimizer", FLAGS.optimizer)
+mlflow.log_param("path", FLAGS.path)
+mlflow.log_param("num_epochs", FLAGS.num_epochs)
+mlflow.log_param("num_particle", FLAGS.num_particle)
+mlflow.log_param("problem", FLAGS.problem)
+mlflow.log_param("learning_rate", FLAGS.learning_rate)
+mlflow.log_param("im_loss_option", FLAGS.im_loss_option)
 
 
 def main(_):
@@ -83,9 +117,9 @@ def main(_):
         x_history = []
         # y_history = []
         #pdb.set_trace()
-        for _ in xrange(FLAGS.num_epochs):
+        for epoch in xrange(FLAGS.num_epochs):
             # Training.
-            print("Epoch: ",_)
+            print("Epoch: ",epoch+1)
             # x_init = sess.run(x_final)
 
             time, cost,  constants, x_ = util.eval_run_epoch(sess, cost_op, [update], reset,
@@ -101,6 +135,28 @@ def main(_):
             # x_end = sess.run(x_final)
             # pdb.set_trace()
 
+            mlflow.log_metric("epoch_min_cost", min(min(cost)), step=epoch+1)
+            mlflow.log_metric("epoch_max_cost", min(min(cost)), step=epoch+1)
+
+            # pdb.set_trace()
+            for step, step_cost in enumerate(cost):
+                step_mean = sum(step_cost) / len(step_cost)
+                variance = sum((x - step_mean) ** 2 for x in step_cost) / len(step_cost)
+                std_dev = math.sqrt(variance)
+
+                mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_min", min(step_cost), step=step+1)
+                mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_max", max(step_cost), step=step+1)
+
+                mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_avg", step_mean, step=step+1)
+                mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_std", std_dev, step=step+1)
+                mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_avg_m_std", step_mean - std_dev, step=step+1)
+                mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_avg_p_std", step_mean + std_dev, step=step+1)
+                for part, part_cost in enumerate(step_cost):
+                    mlflow.log_metric("epoch_"+str(epoch+1)+"_particle_"+ str(part+1)  +"_cost", part_cost, step=step+1)
+                
+
+
+
         with open('./{}/evaluate_record.pickle'.format(FLAGS.path), 'wb') as l_record:
             record = {'all_time_loss_record': all_time_loss_record, 'loss': cost,
                       'constants': [sess.run(item) for item in constants],
@@ -109,7 +165,11 @@ def main(_):
         # Results.
         util.print_stats("Epoch {}".format(FLAGS.num_epochs), total_cost,
                          total_time, FLAGS.num_epochs)
-
-
+        
+        # Assuming you are inside an active MLflow run
+        mlflow.log_artifact(FLAGS.path+'/cw.l2l')
+        mlflow.log_artifact(FLAGS.path+'/loss_record.pickle')
+        mlflow.log_artifact(FLAGS.path+'/evaluate_record.pickle')
+        mlflow.end_run()
 if __name__ == "__main__":
     tf.app.run()
