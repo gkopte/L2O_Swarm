@@ -119,7 +119,6 @@ def self_loss (x, fx_array, n,im_loss_option):
 
 		return ent
 
-
 	sumfx = tf.reduce_mean(tf.reduce_sum(fx_array, -1))
 	preh = np.log(5.**problem_dim)
 	h0 = entropy(x, fx_array,  [preh,0])
@@ -139,7 +138,7 @@ def self_loss (x, fx_array, n,im_loss_option):
 			dim = x_shape[2].eval()
 			
 		unroll_length = unroll_and_part//num_particle
-			
+		pdb.set_trace()
 		
 		im_loss  = tf.constant(0, dtype=tf.float32)
 		# im_loss = tf.get_variable("im_loss",shape=[], dtype=tf.float32, initializer=tf.constant_initializer(0),trainable=False)
@@ -164,10 +163,12 @@ def self_loss (x, fx_array, n,im_loss_option):
 
 			# getting pso x history to calculate loss
 			pso_x_history = tf.reshape(pso_.x_history[1::], (unroll_length, num_particle, dim))
-
+			pso_x_history_detached = tf.stop_gradient(pso_x_history)
+			# x_batch_detached = tf.stop_gradient(x_batch)
 			if vel:
-				pso_x_history = 100*(pso_x_history[1:] - pso_x_history[:-1])
-				x_batch = 1*(x_batch[1:] - x_batch[:-1])
+				s = 1
+				pso_x_history_detached = s*(pso_x_history_detached[1:] - pso_x_history_detached[:-1])
+				x_batch = tf.stop_gradient(s*(x_batch[1:] - x_batch[:-1]))
 
 			# print(pso_x_history)
 
@@ -178,16 +179,16 @@ def self_loss (x, fx_array, n,im_loss_option):
 				return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
 			# tf.stop_gradient(
 			if option=='custom':
-				im_loss += custom_loss(pso_x_history, x_batch)
+				im_loss += custom_loss(pso_x_history_detached, x_batch)
 			elif option=='rmse':
-				im_loss += tf.sqrt(tf.reduce_mean(tf.square(pso_x_history - x_batch)))
+				im_loss += tf.sqrt(tf.reduce_mean(tf.square(pso_x_history_detached - x_batch)))
 			elif option=='huber':
 				huber_loss = tf.keras.losses.Huber(delta=1.0)
-				im_loss += huber_loss(pso_x_history, x_batch)
+				im_loss += huber_loss(pso_x_history_detached, x_batch)
 			elif option=='mse': 
-				im_loss += tf.reduce_mean(tf.reduce_mean((pso_x_history - x_batch)**2,0))
+				im_loss += tf.reduce_mean(tf.reduce_mean((pso_x_history_detached - x_batch)**2,0))
 			else: #sumed square
-				im_loss += tf.reduce_sum(tf.reduce_sum((pso_x_history - x_batch)**2,0))
+				im_loss += tf.reduce_sum(tf.reduce_sum((pso_x_history_detached - x_batch)**2,0))
 
 		return im_loss/batch_size
 	
