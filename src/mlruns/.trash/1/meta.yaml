@@ -1,0 +1,4 @@
+artifact_location: file:///D:/GitHub/LOIS/src/mlruns/1
+experiment_id: '1'
+lifecycle_stage: active
+name: experiment test1
