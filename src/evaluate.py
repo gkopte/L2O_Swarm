@@ -57,16 +57,19 @@ flags.DEFINE_integer("num_steps", 250,
 flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
 flags.DEFINE_string("im_loss_option", "",
                     "function used in the imitation learning loss")
+flags.DEFINE_float("conv_tol", 1.0, "[%] percental of the best cost to consider the steps to converge calculation")
 
-mlflow.set_tag("mlflow.runName", str(FLAGS.path))
+mlflow.set_tag("mlflow.runName", FLAGS.path)   
 mlflow.log_param("optimizer", FLAGS.optimizer)
 mlflow.log_param("path", FLAGS.path)
 mlflow.log_param("num_epochs", FLAGS.num_epochs)
+mlflow.log_param("seed", FLAGS.seed)
 mlflow.log_param("num_particle", FLAGS.num_particle)
 mlflow.log_param("problem", FLAGS.problem)
+mlflow.log_param("num_steps", FLAGS.num_steps)
 mlflow.log_param("learning_rate", FLAGS.learning_rate)
 mlflow.log_param("im_loss_option", FLAGS.im_loss_option)
-
+mlflow.log_param("conv_tol", FLAGS.conv_tol)
 
 def main(_):
     # Configuration.
@@ -116,7 +119,9 @@ def main(_):
         # x_record = [[sess.run(item) for item in x_final]]
         x_history = []
         # y_history = []
+        cost_best_avg_list = []
         #pdb.set_trace()
+        steps_to_converge = []
         for epoch in xrange(FLAGS.num_epochs):
             # Training.
             print("Epoch: ",epoch+1)
@@ -135,10 +140,11 @@ def main(_):
             # x_end = sess.run(x_final)
             # pdb.set_trace()
 
-            mlflow.log_metric("epoch_min_cost", min(min(cost)), step=epoch+1)
-            mlflow.log_metric("epoch_max_cost", min(min(cost)), step=epoch+1)
-
+            mlflow.log_metric("epoch_best_cost", min(min(cost)), step=epoch+1)
+            mlflow.log_metric("epoch_worst_cost", min(min(cost)), step=epoch+1)
+            cost_best_avg_list.append(min(min(cost)))
             # pdb.set_trace()
+            min_reached_flag = False
             for step, step_cost in enumerate(cost):
                 step_mean = sum(step_cost) / len(step_cost)
                 variance = sum((x - step_mean) ** 2 for x in step_cost) / len(step_cost)
@@ -147,14 +153,30 @@ def main(_):
                 mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_min", min(step_cost), step=step+1)
                 mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_max", max(step_cost), step=step+1)
 
+                if (min_reached_flag is False) and (min(step_cost) < cost_best_avg_list[-1]*(1+FLAGS.conv_tol/100)):
+                    steps_to_converge.append(step)
+                    min_reached_flag = True      
+
                 mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_avg", step_mean, step=step+1)
                 mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_std", std_dev, step=step+1)
                 mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_avg_m_std", step_mean - std_dev, step=step+1)
                 mlflow.log_metric("epoch_"+ str(epoch+1) +"_cost_avg_p_std", step_mean + std_dev, step=step+1)
                 for part, part_cost in enumerate(step_cost):
                     mlflow.log_metric("epoch_"+str(epoch+1)+"_particle_"+ str(part+1)  +"_cost", part_cost, step=step+1)
-                
+        
+            mlflow.log_metric("epoch_"+str(epoch+1)+"_steps_to_converge", steps_to_converge[-1])
+            
+        cost_best_avg = sum(cost_best_avg_list) / len(cost_best_avg_list)
+        cost_best_var = sum((x - cost_best_avg) ** 2 for x in cost_best_avg_list) / len(cost_best_avg_list)
+        cost_best_std = math.sqrt(cost_best_var)
+        mlflow.log_metric("cost_best_avg", cost_best_avg)
+        mlflow.log_metric("cost_best_std", cost_best_std)
 
+        steps_to_converge_avg = sum(steps_to_converge) / len(steps_to_converge)
+        steps_to_converge_var = sum((x - steps_to_converge_avg) ** 2 for x in steps_to_converge) / len(steps_to_converge)
+        steps_to_converge_std = math.sqrt(steps_to_converge_var)
+        mlflow.log_metric("steps_to_converge_avg", steps_to_converge_avg)
+        mlflow.log_metric("steps_to_converge_std", steps_to_converge_std)
 
 
         with open('./{}/evaluate_record.pickle'.format(FLAGS.path), 'wb') as l_record:
@@ -167,6 +189,10 @@ def main(_):
                          total_time, FLAGS.num_epochs)
         
         # Assuming you are inside an active MLflow run
+        try:
+            mlflow.log_artifact(FLAGS.path+'_log.txt')
+        except:
+            print("Training log not found")
         mlflow.log_artifact(FLAGS.path+'/cw.l2l')
         mlflow.log_artifact(FLAGS.path+'/loss_record.pickle')
         mlflow.log_artifact(FLAGS.path+'/evaluate_record.pickle')
