@@ -22,7 +22,7 @@ from mlflow.tracking import MlflowClient
 
 client = MlflowClient()
 
-experiment_name = "experiment_test1"
+experiment_name = "IECON2023"
 
 # Get the experiment by name
 experiment = client.get_experiment_by_name(experiment_name)
