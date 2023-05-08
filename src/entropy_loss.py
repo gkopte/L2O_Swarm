@@ -138,7 +138,6 @@ def self_loss (x, fx_array, n,im_loss_option):
 			dim = x_shape[2].eval()
 			
 		unroll_length = unroll_and_part//num_particle
-		pdb.set_trace()
 		
 		im_loss  = tf.constant(0, dtype=tf.float32)
 		# im_loss = tf.get_variable("im_loss",shape=[], dtype=tf.float32, initializer=tf.constant_initializer(0),trainable=False)
@@ -151,8 +150,8 @@ def self_loss (x, fx_array, n,im_loss_option):
 			init_x_batch = tf.slice(x_batch, [0, 0, 0], [1, num_particle, dim])
 			init_x_batch = tf.squeeze(init_x_batch)
 			
-			# building pso graph 
-			pso_ = TF_PSO_Working_OwnFit.pso(fitness_fn=TF_PSO.fitness_function(),pop_size=num_particle, dim=dim, n_iter=unroll_length,x_init=init_x_batch)
+			# building pso graph
+			pso_ = TF_PSO.pso(fitness_fn=TF_PSO.fitness_function(),pop_size=num_particle, dim=dim, n_iter=unroll_length,x_init=init_x_batch)
 			pso_.train()
 
 			# getting pso x history to calculate loss
