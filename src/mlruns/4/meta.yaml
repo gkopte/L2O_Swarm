@@ -1,0 +1,4 @@
+artifact_location: file:///kaggle/working/L2O_Swarm/src/mlruns/4
+experiment_id: '4'
+lifecycle_stage: active
+name: IECON2023
