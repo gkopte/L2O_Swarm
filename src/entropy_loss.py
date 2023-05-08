@@ -3,7 +3,7 @@ import numpy as np
 import pdb
 import problems
 import PSO
-import TF_PSO_Working_OwnFit
+import TF_PSO
 
 debug_mode = False
 
@@ -150,15 +150,9 @@ def self_loss (x, fx_array, n,im_loss_option):
 			# gettinng initial x for this unroll
 			init_x_batch = tf.slice(x_batch, [0, 0, 0], [1, num_particle, dim])
 			init_x_batch = tf.squeeze(init_x_batch)
-
-			# print(init_x_batch)
-
-			# #creating tensor for pso x and coping initial x to it
-			# x_pso = tf.Variable(tf.zeros(tf.shape(first_instance)), dtype=tf.float32)
-			# x_pso.assign(first_instance)
 			
 			# building pso graph 
-			pso_ = TF_PSO_Working_OwnFit.pso(fitness_fn=TF_PSO_Working_OwnFit.fitness_function(),pop_size=num_particle, dim=dim, n_iter=unroll_length,x_init=init_x_batch)
+			pso_ = TF_PSO_Working_OwnFit.pso(fitness_fn=TF_PSO.fitness_function(),pop_size=num_particle, dim=dim, n_iter=unroll_length,x_init=init_x_batch)
 			pso_.train()
 
 			# getting pso x history to calculate loss

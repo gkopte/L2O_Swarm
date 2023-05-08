@@ -1,211 +1,199 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-import numpy as np
 import tensorflow as tf
-import problems
+# tf.enable_eager_execution()
+# import tensorflow_probability as tfp
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 import pdb
+import problems
+import copy
+import random
 
-debug_mode = True
 
-# Construção do grafo
-      
-def build_PSO_graph(x_ini,v_ini):
-    # Definição dos hyperparâmetros
-    swarm_size = 10
-    num_dims = 2
-    stddev = 0.01
-    dtype = tf.float32
-    mode = 'test'
-    
-    # Inicialização das partículas
-    x = tf.get_variable(
-        "x",
-        shape=[swarm_size, num_dims],
-        dtype=dtype,
-        initializer=tf.random_uniform_initializer(-3, 3),
-        trainable=True)
-    x.assign(x_ini)
-        
-    # Construção da função de fitness
-    fitness = problems.square_cos(swarm_size, num_dims, stddev, dtype, mode)()
-    
-    # Definição dos placeholders e da operação de otimização
-    better_particle = tf.get_variable(
-        "best_particle",
-        shape=[num_dims],
-        dtype=dtype,
-        initializer=tf.constant_initializer(100),
-        trainable=True)
+np.random.seed(123)
+tf.random.set_random_seed(123)
+# tf.random.set_random_seed(123)
 
-    gbest = tf.get_variable(
-        "global_best_particle",
-        shape=[swarm_size, num_dims],
-        dtype=dtype,
-        initializer=tf.constant_initializer(100),
-        trainable=True)
-    # gbest.assign(gbest_init)
-        
-    # global_best_fitness  = tf.get_variable(
-    #     "global_best_fitness",
-    #     shape=[swarm_size],
-    #     dtype=dtype,
-    #     initializer=tf.zeros_initializer(),
-    #     trainable=True)
-        
-    pbest = tf.get_variable(
-        "personal_best_particle",
-        shape=[swarm_size, num_dims],
-        dtype=dtype,
-        initializer=tf.constant_initializer(100.0),
-        trainable=True)
-    # pbest.assign(pbest_init)
-    if debug_mode is True:
-       pdb.set_trace()
-        
-    # personal_best_fitness = tf.get_variable(
-    #     "personal_best_fitness",
-    #     shape=[swarm_size],
-    #     dtype=dtype,
-    #     initializer=tf.zeros_initializer(),
-    #     trainable=True)
-        
-    v = tf.get_variable(
-        "particle_velocity",
-        shape=[swarm_size, num_dims],
-        dtype=dtype,
-        initializer=tf.zeros_initializer(),
-        trainable=True)
-    v.assign(v_ini)
-        
-    # Definição da atualização das partículas
-    with tf.variable_scope("update_particles"):
-        random1 = tf.random_uniform(
-            shape=[swarm_size, num_dims],
-            minval=0,
-            maxval=1,
-            dtype=dtype)
-            
-        random2 = tf.random_uniform(
-            shape=[swarm_size, num_dims],
-            minval=0,
-            maxval=1,
-            dtype=dtype)
+debug_mode = False
 
-    # Definição dos coeficientes de atualização    
-    num_particles = swarm_size # número de partículas
-    num_dims = 2 # número de dimensões do espaço de busca
-    c1 = 2.05 # constante de aceleração pessoal
-    c2 = 2.05 # constante de aceleração social
-    w = 0.7298 # inércia
-    if debug_mode is True:
-       pdb.set_trace()
+class pso:
+    def __init__(
+        self,
+        fitness_fn,
+        mode='test',
+        pop_size=10,
+        dim=2,
+        n_iter=200,
+        b=0.9,
+        c1=0.8,
+        c2=0.5,
+        x_min=-1,
+        x_max=1,
+        x_init = None
+        ):
+        self.fitness_fn = fitness_fn
+        self.mode = mode
+        self.pop_size = pop_size
+        self.dim = dim
+        self.n_iter = n_iter
+        self.b = b
+        self.c1 = c1
+        self.c2 = c2
+        self.x_min = x_min
+        self.x_max = x_max
+        self.x = self.build_swarm(x_init)
+        self.p = self.x
+        self.f_p = self.fitness_fn(self.x,batch_size=self.pop_size,dim=self.dim,mode=self.mode)
+        self.fit_history = []
+        self.x_history = []
+        self.x_history.append(self.x)
+        if debug_mode:
+            pdb.set_trace()
+        self.g = self.p[tf.math.argmin(input=self.f_p)]
+        self.v = self.start_velocities()
 
-    for i in range(10):
 
-        v = w * v + c1 * random1 * (pbest - x) + c2 * random2 * (gbest - x)
+    def build_swarm(self,x_init):
+        """Creates the swarm following the selected initialization method. 
+        Returns:
+            tf.Tensor: The PSO swarm population. Each particle represents a neural
+            network. 
+        """
+        if x_init!=None:
+            # x_internal = tf.Variable(tf.zeros(tf.shape(x_init)), dtype=tf.float32)
+            # x_internal.assign(x_init)
+            return x_init
+        return tf.Variable(
+            tf.random.uniform([self.pop_size, self.dim], self.x_min, self.x_max)
+        )
 
-        # Atualização da posição
-        x = x + v
 
+    def start_velocities(self):
+        """Start the velocities of each particle in the population (swarm). 
+        Returns:
+            tf.Tensor: The starting velocities.  
+        """
+        return tf.Variable(
+            tf.random.uniform(
+                [self.pop_size, self.dim],
+                 self.x_min,
+                self.x_max ,
+            )
+        )
+
+
+    def get_randoms(self):
+        """Generate random values to update the particles' positions. 
+        Returns:
+            _type_: _description_
+        """
+        return np.random.uniform(0, 1, [2, self.dim])[:, None]
+
+    def update_p_best(self):
+        """Updates the *p-best* positions. 
+        """
+        f_x = self.fitness_fn(self.x,batch_size=self.pop_size,dim=self.dim,mode=self.mode)
+        self.fit_history.append(tf.reduce_mean(f_x))
         if debug_mode is True:
             pdb.set_trace()
-        # Atualização da melhor posição pessoal
-        better_particle = tf.where(fitness > fitness[tf.argmin(fitness)], x, pbest)
+        # f_x_tiled = tf.tile(f_x, [1, self.dim])
+        # f_p_tiled = tf.tile(self.f_p, [1, self.dim])
         
+        self.p = tf.where(f_x < self.f_p, self.x, self.p)
+        self.f_p = tf.where(f_x < self.f_p, f_x, self.f_p)
 
-        global_best = tf.reduce_min(fitness)
-        gbest = tf.where(fitness == global_best, x, gbest)
+    def update_g_best(self):
+        """Update the *g-best* position. 
+        """
+        self.g = self.p[tf.math.argmin(input=self.f_p)]
 
-        out = sess.run((global_best,pbest, gbest,x,v, better_particle ,fitness))
-        print(out)
-    return out
+    def step(self):
+        """It runs ONE step on the particle swarm optimization. 
+        """
+        r1, r2 = self.get_randoms()
+        self.v = (
+            self.b * self.v
+            + self.c1 * r1 * (self.p - self.x)
+            + self.c2 * r2 * (self.g - self.x)
+        )
+        self.x = tf.clip_by_value(self.x + self.v, self.x_min, self.x_max)
+        self.update_p_best()
+        self.update_g_best()
 
-    # print('IN global_best ',out[0])
-    # print('IN gbest ',out[1])
-    # print('IN better_particle ',out[2])
-    # print('IN fitness',out[3])
-    return out
+    def train(self):
+        """The particle swarm optimization. The PSO will optimize the weights according to the losses of the neural network, so this process is actually the neural network training. 
+        """
+        for i in range(self.n_iter):
+            self.step()
+            self.x_history.append(self.x)
+
+def objective_function(X):
+    return tf.math.sqrt(X[:,0]**2 + X[:,1]**2)[:,None]
+
+def rastrigin_function(X, dim=2):
+    A = 10
+    return A * dim + tf.reduce_sum(tf.square(X) - A * tf.cos(2 * np.pi * X), axis=1, keepdims=True)
+
+def fitness_function():
+    def f(X,batch_size,dim,mode):
+        return square_cos(X,batch_size=batch_size,num_dims=dim,mode=mode)
+    return f
+
+def square_cos(x,mode='train',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0.01):
+    # Trainable variable.
+    if mode=='test':
+    #   x = x - 1.0
+      return ( tf.reduce_sum(x*x - 10*tf.math.cos(2*3.1415926*x), 1)+ 10*num_dims )
+    # x = x - 1.0
+    product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
+    product2 = tf.reduce_sum(wcos*10*tf.math.cos(2*3.1415926*x), 1)
+    #product3 = tf.reduce_sum((product - y) ** 2, 1) - tf.reduce_sum(product2, 1) + 10*num_dims
+    return (tf.reduce_sum((product - y) ** 2, 1)) - tf.reduce_mean(product2) + 10*num_dims
+
+def quadratic(x,mode='test',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0.01):
+    """Quadratic problem: f(x) = ||Wx - y||. Builds loss graph."""
+    product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
+    return (tf.reduce_sum((product - y) ** 2, 1))
 
 
 
 if __name__ == '__main__':
-  with tf.Session() as sess:
-    
-    with tf.variable_scope("square_cos", reuse=tf.AUTO_REUSE):
-        x = tf.get_variable("x",shape=[10, 2],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
-        v = tf.get_variable("x",shape=[10, 2],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
-        w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
-        y = tf.get_variable("y",shape=[10, 2],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
-        wcos = tf.get_variable("wcos",shape=[10, 2],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
-        gbest = tf.get_variable(
-        "global_best_particle",
-        shape=[10, 2],
-        dtype=np.float32,
-        initializer=tf.zeros_initializer(),
-        trainable=True)
-
-        pbest = tf.get_variable(
-        "personal_best_particle",
-        shape=[10, 2],
-        dtype=np.float32,
-        initializer=tf.zeros_initializer(),
-        trainable=True)
-
-        v = tf.get_variable(
-        "particle_velocity",
-        shape=[10, 2],
-        dtype=np.float32,
-        initializer=tf.zeros_initializer(),
-        trainable=True)
+    pop_size = 7
+    dim = 5
+    n_iter = 250
+    n_epochs = 30
+    x_val = tf.get_variable("x",shape=[pop_size,dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
+    # w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
+    w = tf.get_variable("w",
+                    shape=[1, dim, dim],
+                    dtype=np.float32,
+                    initializer=tf.random_uniform_initializer(),
+                    # initializer=tf.constant_initializer(1.0),
+                    trainable=False)
+    # w = tf.get_variable("w", dtype=np.float32,initializer=tf.constant_initializer(1.0),trainable=False)
+    y = tf.get_variable("y",shape=[pop_size, dim],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
+    # y = tf.get_variable("y",shape=[pop_size, dim],dtype=np.float32,initializer=tf.constant_initializer(-1.0),trainable=False)
+    wcos = tf.get_variable("wcos",shape=[pop_size, dim],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
+    with tf.Session() as sess:
+        for i in range(n_epochs):
         
-        problem = problems.square_cos(batch_size=10, num_dims=2, mode='test')()
-        sess.run(tf.global_variables_initializer())
-        output = []
-        # for i in range(10):
-            # global_best, gbest, better_particle ,fitness = sess.run(build_PSO_graph(x,v))
-        global_best, pbest, gbest,x,v, better_particle ,fitness = build_PSO_graph(x,v)
+            print('Epoch ', i)
+            seed_value = random.randint(0, 100)
+            tf.set_random_seed(seed_value)
 
-        print('best_particle ',gbest)
-        print('x ',better_particle)
-        print('fitness ',fitness)
-
-
-
-
-
-#     with tf.Session() as sess:
-#         sess.run(tf.global_variables_initializer())
-
-#         for i in range(10):
-#             new_pos,best_pos, global_besties = sess.run([x,gbest,global_best])
-#             fit = sess.run(fitness, feed_dict={x:new_pos})
+        
             
-#             # Print the current iteration and best fitness
-#             print("Iteration: {} new pos: {}".format(i, new_pos))
-#             print("Global best {}".format(fit))
-
-            
-#         print("Best position: {}".format(best_pos))
-
-# with tf.variable_scope("square_cos", reuse=tf.AUTO_REUSE):
-#     build_PSO_graph()
-
-
-
-
-# import tensorflow as tf
-
-# def loop_body(i, count):
-#     return i + 1, count + 1
-
-# def counter(n):
-#     i = tf.constant(0)
-#     count = tf.constant(0)
-#     result = tf.while_loop(lambda i, count: i < n, loop_body, [i, count])
-#     return result[1]
-
-# result = counter(5)
-# with tf.Session() as sess:
-#     print(sess.run(result))
+            opt = pso(fitness_fn=fitness_function(),pop_size=pop_size, dim=dim, n_iter=n_iter,x_init=x_val)
+            sess.run(tf.global_variables_initializer())
+            opt.train()
+            # print(sess.run(opt.fit_history))
+            print('final cost:', min(sess.run(opt.fit_history)))
+            # print(sess.run(opt.x))
+            # print(sess.run(opt.x_history))
+            # print(opt.f_p)
+        # print(opt.fit_history)
+        ## Define the grid for future plotting:
+        
+        
+        # anim = animation.FuncAnimation(fig,snapshot,frames=60)
+        # anim.save("PSO_tensorflow.mp4", fps=6)
