@@ -1,0 +1,15 @@
+artifact_uri: file:///kaggle/working/L2O_Swarm/src/mlruns/4/2b228cc378a44df3bb2b8239292832c1/artifacts
+end_time: 1683665877209
+entry_point_name: ''
+experiment_id: '4'
+lifecycle_stage: active
+name: ''
+run_id: 2b228cc378a44df3bb2b8239292832c1
+run_uuid: 2b228cc378a44df3bb2b8239292832c1
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1683663909006
+status: 3
+tags: []
+user_id: root
