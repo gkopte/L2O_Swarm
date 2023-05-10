@@ -49,7 +49,7 @@ def eval_run_epoch(sess, cost_op, ops, reset, num_unrolls, var1, var2):
     # print(x_[:,-1,:])
     # print(y_[:,0,:])
     # print(y_[:,-1,:])
-    x_history.append([x_[:,0,:],x_[:,-1,:]])
+    x_history.append(x_)
     # y_history.append(y_[:,0,:],y_[:,-1,:])
     
     for i in range(len(cost_op)):
