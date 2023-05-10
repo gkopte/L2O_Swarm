@@ -1,0 +1,4 @@
+artifact_location: file:///D:/GitHub/LOIS/src/mlruns/3
+experiment_id: '3'
+lifecycle_stage: active
+name: IECON2023_train
