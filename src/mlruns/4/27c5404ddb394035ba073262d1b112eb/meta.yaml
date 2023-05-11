@@ -2,7 +2,7 @@ artifact_uri: file:///D:/GitHub/LOIS/src/mlruns/4/27c5404ddb394035ba073262d1b112
 end_time: 1683756760906
 entry_point_name: ''
 experiment_id: '4'
-lifecycle_stage: active
+lifecycle_stage: deleted
 name: ''
 run_id: 27c5404ddb394035ba073262d1b112eb
 run_uuid: 27c5404ddb394035ba073262d1b112eb

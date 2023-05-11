@@ -3,3 +3,4 @@
 /src/graphs_eval
 /src/.vscode
 /src/mlruns/.trash
+evaluate_record.pickle
