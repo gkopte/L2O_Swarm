@@ -152,9 +152,13 @@ def square_cos(x,mode='train',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0
 
 def quadratic(x,mode='test',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0.01):
     """Quadratic problem: f(x) = ||Wx - y||. Builds loss graph."""
-    product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
+    w_val = tf.get_variable("w_val",
+                        shape=[batch_size, num_dims, num_dims],
+                        dtype=dtype,
+                        initializer=tf.random_uniform_initializer(),
+                        trainable=False)
+    product = tf.squeeze(tf.matmul(w_val, tf.expand_dims(x, -1)))
     return (tf.reduce_sum((product - y) ** 2, 1))
-
 
 
 if __name__ == '__main__':
