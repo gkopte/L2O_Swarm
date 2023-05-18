@@ -125,7 +125,7 @@ def get_config(problem_name, path=None, mode='train'):
     }
     net_assignments = [("cw", ["x_0"]), ("adam", ["x_1"])]
   elif problem_name == "quadratic":
-    problem = problems.quadratic(batch_size=128, num_dims=2)
+    problem = problems.quadratic(batch_size=128, num_dims=5)
     net_config = {"cw": {
         "net": "CoordinateWiseDeepLSTM",
         "net_options": {"layers": (20, 20)},
