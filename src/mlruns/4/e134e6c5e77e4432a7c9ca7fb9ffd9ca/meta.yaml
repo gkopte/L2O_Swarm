@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/GitHub/LOIS/src/mlruns/4/e134e6c5e77e4432a7c9ca7fb9ffd9ca/artifacts
+end_time: 1684413865904
+entry_point_name: ''
+experiment_id: '4'
+lifecycle_stage: active
+name: ''
+run_id: e134e6c5e77e4432a7c9ca7fb9ffd9ca
+run_uuid: e134e6c5e77e4432a7c9ca7fb9ffd9ca
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1684412016672
+status: 3
+tags: []
+user_id: root
