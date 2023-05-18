@@ -136,7 +136,7 @@ def rastrigin_function(X, dim=2):
 
 def fitness_function():
     def f(X,batch_size,dim,mode):
-        return square_cos(X,batch_size=batch_size,num_dims=dim,mode=mode)
+        return quadratic(X,batch_size=batch_size,num_dims=dim,mode=mode)
     return f
 
 def square_cos(x,mode='train',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0.01):
@@ -152,18 +152,24 @@ def square_cos(x,mode='train',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0
 
 def quadratic(x,mode='test',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0.01):
     """Quadratic problem: f(x) = ||Wx - y||. Builds loss graph."""
-    w_val = tf.get_variable("w_val",
-                        shape=[batch_size, num_dims, num_dims],
-                        dtype=dtype,
-                        initializer=tf.random_uniform_initializer(),
-                        trainable=False)
-    product = tf.squeeze(tf.matmul(w_val, tf.expand_dims(x, -1)))
-    return (tf.reduce_sum((product - y) ** 2, 1))
+    with tf.variable_scope('PSO', reuse=tf.AUTO_REUSE):
+        w = tf.get_variable("w",
+                            shape=[batch_size, num_dims, num_dims],
+                            dtype=dtype,
+                            initializer=tf.random_uniform_initializer(),
+                            trainable=False)
+        y = tf.get_variable("y",
+                            shape=[batch_size, num_dims],
+                            dtype=dtype,
+                            initializer=tf.random_uniform_initializer(),
+                            trainable=False)
+        product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
+        return (tf.reduce_sum((product - y) ** 2, 1))
 
 
 if __name__ == '__main__':
     pop_size = 7
-    dim = 5
+    dim = 2
     n_iter = 250
     n_epochs = 30
     x_val = tf.get_variable("x",shape=[pop_size,dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))

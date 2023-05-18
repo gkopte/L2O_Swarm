@@ -1,0 +1,15 @@
+artifact_uri: file:///D:/GitHub/LOIS/src/mlruns/3/aec4d398d9894eacb3035075a7ba77a6/artifacts
+end_time: 1684358918781
+entry_point_name: ''
+experiment_id: '3'
+lifecycle_stage: active
+name: ''
+run_id: aec4d398d9894eacb3035075a7ba77a6
+run_uuid: aec4d398d9894eacb3035075a7ba77a6
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1684346600979
+status: 3
+tags: []
+user_id: Gabriel
