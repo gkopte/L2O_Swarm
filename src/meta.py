@@ -22,6 +22,8 @@ import networks
 import pickle
 import pdb
 
+debug_mode = False
+
 
 def _nested_assign(ref, value):
   """Returns a nested collection of TensorFlow assign operations.
@@ -267,6 +269,7 @@ class MetaOptimizer(object):
   def meta_loss(self,
                 make_loss,
                 len_unroll,
+                im_loss_option,
                 net_assignments=None,
                 model_path = None,
                 second_derivatives=False):
@@ -290,7 +293,8 @@ class MetaOptimizer(object):
     
     sub_x, sub_constants=_get_variables(make_loss)
     print (sub_x, sub_constants)
-    pdb.set_trace()
+    if debug_mode:
+      pdb.set_trace()
 #    print(len(sub_x))
     
     def intra_init(x):
@@ -698,8 +702,8 @@ class MetaOptimizer(object):
     # we need x_array for calculating the entropy loss
     x_array = tf.TensorArray(tf.float32, size=(len_unroll + 1)*self.num_lstm,
                               clear_after_read=False)
-
-    pdb.set_trace()
+    if debug_mode:
+      pdb.set_trace()
     _, fx_array, x_final, x_array, s_final = tf.while_loop(
         cond=lambda t, *_: t < len_unroll,
         body=time_step,
@@ -707,7 +711,7 @@ class MetaOptimizer(object):
         parallel_iterations=1,
         swap_memory=True,
         name="unroll")
-
+    print('fx_array: ',fx_array)
     with tf.name_scope("fx"):
 #      pdb.set_trace()
 #      print('x_final',x_final)
@@ -730,10 +734,10 @@ class MetaOptimizer(object):
 
 
     print (x[0].shape, x_final[0].shape,  len(fx_final),'xinfal11', len_unroll)
-    
-    loss = entropy_loss.self_loss(x_array.stack(), fx_array.stack(), (len_unroll + 1)*self.num_lstm)
+
+    loss = entropy_loss.self_loss(x_array.stack(), fx_array.stack(), (len_unroll + 1)*self.num_lstm, im_loss_option)
     #loss = tf.reduce_mean(tf.reduce_sum(fx_array.stack(), -1))
-    #print (loss.shape)
+    # print (loss.shape)
     #exit(0)
     
 
@@ -766,7 +770,7 @@ class MetaOptimizer(object):
 
     return MetaLoss(loss, update, reset, fx_final, x_final, sub_constants)
 
-  def meta_minimize(self, make_loss, len_unroll, learning_rate=0.01, **kwargs):
+  def meta_minimize(self, make_loss, len_unroll, im_loss_option,learning_rate=0.01, **kwargs):
     """Returns an operator minimizing the meta-loss.
 
     Args:
@@ -779,7 +783,7 @@ class MetaOptimizer(object):
     Returns:
       namedtuple containing (step, update, reset, fx, x)
     """
-    info = self.meta_loss(make_loss, len_unroll, **kwargs)
+    info = self.meta_loss(make_loss, len_unroll, im_loss_option,**kwargs)
     optimizer = tf.train.AdamOptimizer(learning_rate)
     regular = tf.contrib.layers.apply_regularization(tf.contrib.layers.l2_regularizer(1e-4), tf.trainable_variables())
 #    gradients = optimizer.compute_gradients(info.loss+regular)

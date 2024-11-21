@@ -184,9 +184,9 @@ tolerance = 1e-5
 def fitness_fn(sess, problem, x,x_val):
   #print("x shape: {}".format(x.shape))
   x_val = np.array(x_val,dtype=np.float32).reshape(1,-1)
-  #print("x_val shape: {}".format(x_val.shape))
+  print("x_val shape: {}".format(x_val.shape))
   sess.run(x.assign(x_val))
-  #print(sess.run(x))
+  print(sess.run(x))
   result = sess.run(problem)
   return result.reshape(1, -1).astype(np.float32)
 
@@ -214,7 +214,7 @@ if __name__ == '__main__':
     # best_position = pso(sess,fitness_fn, max_iter, num_particles, num_dims, -3, 3)
     init_pos = [[i-1,i+1] for i in range(num_particles)]
     init_vel = [[0,0] for i in range(num_particles)]
-    best_position, swarm = pso(sess, fitness_fn,problem, x,max_iter, num_particles, num_dims, -3, 3,init_pos,init_vel)
+    best_position, swarm = pso(sess, fitness_fn,problem,x ,max_iter, num_particles, num_dims, -3, 3,init_pos,init_vel)
 
   print(best_position)
   print([part.position for part in swarm])

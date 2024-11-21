@@ -3,6 +3,10 @@ import numpy as np
 import pdb
 import problems
 import PSO
+import TF_PSO
+
+debug_mode = False
+
 
 
 
@@ -24,7 +28,7 @@ def distance_matrix(x1, n1, x2, n2, dim):
 
 
 
-def self_loss (x, fx_array, n):
+def self_loss (x, fx_array, n,im_loss_option):
 	# lambda values for controling the  balance between exploitation and exploration.
 	lam=0.001
 	print(x)
@@ -35,6 +39,7 @@ def self_loss (x, fx_array, n):
 	fx_array,f1 = tf.split(fx_array, [n,0], 0)
 	problem_dim = x.shape.as_list()[-1]
 	batch_size = x.shape.as_list()[1]
+	print("Batch size ",batch_size)
 	x = tf.transpose(x, [1,0,2])
 	fx_array = tf.transpose(fx_array, [1,0])
 
@@ -114,63 +119,126 @@ def self_loss (x, fx_array, n):
 
 		return ent
 
-
 	sumfx = tf.reduce_mean(tf.reduce_sum(fx_array, -1))
 	preh = np.log(5.**problem_dim)
 	h0 = entropy(x, fx_array,  [preh,0])
 	h  = entropy(x, fx_array,  [h0,1])
 
-	# def fitness_fn(IL_sess, problem, x_val):
-	# 	x_val = np.array(x_val,dtype=np.float32).reshape(1, -1)
-	# 	IL_sess.run(x.assign(x_val))
-	# 	#print(sess.run(x))
-	# 	result = IL_sess.run(problem)
-	# 	return result.reshape(-1, 1).astype(np.float32)
+	def imitation_error(x, fx_array, n, option='', vel=False):
+		print('imitation_error option: ',option)
+		print("x shape:", x.shape)
+		print("vel: ", vel)
 
-	def imitation_error(x, fx_array, n):
-		with tf.Session() as IL_sess:			
-			with tf.variable_scope("problem", reuse=tf.AUTO_REUSE):
-				x_val = tf.get_variable("x",shape=[1,problem_dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
-				w_val = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
-				y_val = tf.get_variable("y",shape=[1,problem_dim],dtype=np.float32,initializer=tf.random_normal_initializer(stddev=0.01/2),trainable=False)
-				w_val = tf.get_variable("wcos",shape=[1,problem_dim],dtype=np.float32,initializer=tf.random_normal_initializer(mean=1.0, stddev=0.01/2),trainable=False)
+		num_particle = 7
+		x_shape = tf.shape(x)
+
+		with tf.Session() as sess:
+			batch_size = x_shape[0].eval() 
+			unroll_and_part = x_shape[1].eval()
+			dim = x_shape[2].eval()
 			
-				IL_sess.run(tf.global_variables_initializer())
-				problem = problems.square_cos(batch_size=1, num_dims=problem_dim, mode='test')()
-
-				# init_pos = [[i-1,i+1] for i in range(x.shape[1])]
-				print("x shape:", x.shape)
-				#print("x_val shape:", x_val.shape)
-
-				first_instance = tf.slice(x, [0, 0, 0], [1, n,problem_dim])
-				first_instance = tf.squeeze(first_instance)
-				print(first_instance)
-
-				last_instance = tf.slice(x, [batch_size-1, 0, 0], [1, n,problem_dim])
-				last_instance = tf.squeeze(last_instance)
-				last_instance_np = IL_sess.run(last_instance)
-
-				init_pos = IL_sess.run(first_instance).tolist()
-				print("init_pos", init_pos)
-				print("n :",n)
-				init_vel = np.zeros(shape=(n,problem_dim)).tolist()
-				# init_vel = [np.zeros(x.shape[1:]).tolist() for i in range(n)]
-				print("init_vel", init_vel)
-				best_position, swarm = PSO.pso(IL_sess, PSO.fitness_fn,problem, x_val,batch_size, n, problem_dim, -3, 3,init_pos,init_vel)
-				print(best_position)
-				best_position_array = np.array(best_position)
-				# tf.reduce_mean(tf.reduce_sum(fx_array, -1))
-				output = tf.reduce_mean(tf.reduce_sum(tf.constant((best_position_array - last_instance_np)**2),-1))
-				num = IL_sess.run(output)
-				return num
+		unroll_length = unroll_and_part//num_particle
+		
+		im_loss  = tf.constant(0, dtype=tf.float32)
+		# im_loss = tf.get_variable("im_loss",shape=[], dtype=tf.float32, initializer=tf.constant_initializer(0),trainable=False)
+		for batch in range(batch_size):
 			
+			x_batch = tf.slice(x, [tf.stop_gradient(batch), 0, 0], [1, unroll_and_part, dim])
+			x_batch = tf.squeeze(x_batch)
+			x_batch  = tf.reshape(x_batch, [unroll_length, num_particle, dim])
+			# gettinng initial x for this unroll
+			init_x_batch = tf.slice(x_batch, [0, 0, 0], [1, num_particle, dim])
+			init_x_batch = tf.squeeze(init_x_batch)
+			
+			# building pso graph
+			pso_ = TF_PSO.pso(fitness_fn=TF_PSO.fitness_function(),pop_size=num_particle, dim=dim, n_iter=unroll_length,x_init=init_x_batch)
+			pso_.train()
 
-			#sess, fitness_fn,problem, max_iter, num_particles, num_dims, -3, 3,init_pos,init_vel
+			# getting pso x history to calculate loss
+			pso_x_history = tf.reshape(pso_.x_history[1::], (unroll_length, num_particle, dim))
+			pso_x_history_detached = tf.stop_gradient(pso_x_history)
+			pdb.set_trace()
+			# x_batch_detached = tf.stop_gradient(x_batch)
+			if vel:
+				s = 1
+				pso_x_history_detached = s*(pso_x_history_detached[1:] - pso_x_history_detached[:-1])
+				x_batch = tf.stop_gradient(s*(x_batch[1:] - x_batch[:-1]))
 
-	im_error = imitation_error(x, fx_array, n)
-	print("im_error shape:", im_error.shape)
-	print("sumfx shape:", sumfx.shape)
-	return sumfx+lam*h+im_error
+			# print(pso_x_history)
+
+			def custom_loss(y_true, y_pred):
+				z = tf.abs(y_true - y_pred)
+				quadratic = tf.maximum(1.0, z)**2
+				absolute = tf.minimum(1.0, z)
+				return tf.reduce_mean(tf.where(z >= 1.0, quadratic, absolute))
+			# tf.stop_gradient(
+			if option=='custom':
+				im_loss += custom_loss(pso_x_history_detached, x_batch)
+			elif option=='rmse':
+				im_loss += tf.sqrt(tf.reduce_mean(tf.square(pso_x_history_detached - x_batch)))
+			elif option=='huber':
+				huber_loss = tf.keras.losses.Huber(delta=1.0)
+				im_loss += huber_loss(pso_x_history_detached, x_batch)
+			elif option=='mse': 
+				im_loss += tf.reduce_mean(tf.reduce_mean((pso_x_history_detached - x_batch)**2,0))
+			else: #sumed square
+				im_loss += tf.reduce_sum(tf.reduce_sum((pso_x_history_detached - x_batch)**2,0))
+
+		return im_loss/batch_size
+	
+	# im_loss_option = 'mse'
+	start_index = len(im_loss_option)-4
+	if im_loss_option[start_index:] == "_vel":
+		vel = True
+		im_loss_option = im_loss_option[:start_index]
+	else:
+		vel = False
+	
+	k = 1.0 # imitation scaling factor
+	if im_loss_option=='mse':
+		im_loss = imitation_error(x, fx_array, n,'mse', vel)
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
+	elif im_loss_option=='square':
+		im_loss = imitation_error(x, fx_array, n,'square', vel)
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
+	elif im_loss_option=='rmse':
+		im_loss = imitation_error(x, fx_array, n,'rmse', vel)
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
+	elif im_loss_option=='huber':
+		im_loss = imitation_error(x, fx_array, n,'huber', vel)
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
+	elif im_loss_option=='custom':
+		im_loss = imitation_error(x, fx_array, n,'custom', vel)
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+im_loss*k
+	elif im_loss_option=='only_im':
+		im_loss = imitation_error(x, fx_array, n,'mse', vel)
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return im_loss*k
+	elif im_loss_option=='only_sumfx':
+		print("sumfx shape:", sumfx.shape)
+		return sumfx
+	elif im_loss_option=='entropy_im':
+		im_loss = imitation_error(x, fx_array, n,'square', vel)
+		print("im_loss shape:", im_loss.shape)
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+lam*h+im_loss*k
+	elif im_loss_option is None or im_loss_option.lower()=='none': #Sanity check
+		print("Warning: No self loss")
+		return 0
+	else:
+		print("sumfx shape:", sumfx.shape)
+		return sumfx+lam*h
 
 if __name__ == "__main__":
 	# with tf.variable_scope("square_cos", reuse=tf.AUTO_REUSE):
@@ -193,17 +261,17 @@ if __name__ == "__main__":
 			loss = self_loss(x, fx_array, 10)
 		
 			print(loss)
-			print (loss.shape)
+			print(loss.shape)
 			
 		
-			for i in range(20):
-				# sess.run(tf.global_variables_initializer())
-				if i == 10:
-					sess.run(x.assign(tf.zeros((10,128, 2))))
-					#print(sess.run(x))
+			# for i in range(20):
+			# 	# sess.run(tf.global_variables_initializer())
+			# 	if i == 10:
+			# 		sess.run(x.assign(tf.zeros((10,128, 2))))
+			# 		#print(sess.run(x))
 					
-					sess.run(fx_array.assign(tf.zeros((10, 128))))		
-				print(sess.run(loss))
+			# 		sess.run(fx_array.assign(tf.zeros((10, 128))))		
+			# 	print(sess.run(loss))
 
 				# print()
 				#tt1 = sess.run(t1)

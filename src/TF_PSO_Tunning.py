@@ -93,10 +93,9 @@ class pso:
         """Updates the *p-best* positions. 
         """
         f_x = self.fitness_fn(self.x,batch_size=self.pop_size,dim=self.dim,mode=self.mode)
+        self.fit_history.append(tf.reduce_mean(f_x))
         if debug_mode is True:
             pdb.set_trace()
-        self.fit_history.append(tf.reduce_mean(f_x))
-        
         # f_x_tiled = tf.tile(f_x, [1, self.dim])
         # f_p_tiled = tf.tile(self.f_p, [1, self.dim])
         
@@ -151,164 +150,10 @@ def square_cos(x,mode='train',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0
     #product3 = tf.reduce_sum((product - y) ** 2, 1) - tf.reduce_sum(product2, 1) + 10*num_dims
     return (tf.reduce_sum((product - y) ** 2, 1)) - tf.reduce_mean(product2) + 10*num_dims
 
-def quadratic(x,mode='train',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0.01):
+def quadratic(x,mode='test',batch_size=10,num_dims=5,dtype=tf.float32,stddev=0.01):
     """Quadratic problem: f(x) = ||Wx - y||. Builds loss graph."""
-    with tf.variable_scope('PSO', reuse=tf.AUTO_REUSE):
-        w = tf.get_variable("w",
-                            shape=[batch_size, num_dims, num_dims],
-                            dtype=dtype,
-                            initializer=tf.random_uniform_initializer(),
-                            trainable=False)
-        y = tf.get_variable("y",
-                            shape=[batch_size, num_dims],
-                            dtype=dtype,
-                            initializer=tf.random_uniform_initializer(),
-                            trainable=False)
-        product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
-        return (tf.reduce_sum((product - y) ** 2, 1))
-    
-def rosenbrock(x, batch_size=10, num_dims=2, dtype=tf.float32, mode='test'):
-    """Builds loss graph."""
-    # Trainable variable.
-    # x = tf.get_variable(
-    #     "x",
-    #     shape=[batch_size, num_dims],
-    #     dtype=dtype,
-    #     initializer=tf.random_uniform_initializer(-3, 3)
-    # )
-
-    if mode=='test':
-        a = tf.constant(1, dtype=dtype)
-        b = tf.constant(100, dtype=dtype)
-        x1 = x[:, :-1]
-        x2 = x[:, 1:]
-        return tf.reduce_sum(b * (x2 - x1**2.0)**2.0 + (a - x1)**2.0, axis=1)
-
-    # In training mode, 'a' and 'b' are randomly initialized
-    a = tf.get_variable("a",
-                        shape=[batch_size, num_dims-1],
-                        dtype=dtype,
-                        initializer=tf.random_uniform_initializer(-3, 3),
-                        trainable=False)
-
-    b = tf.get_variable("b",
-                        shape=[batch_size, num_dims-1],
-                        dtype=dtype,
-                        initializer=tf.random_uniform_initializer(80, 120),
-                        trainable=False)
-
-    # Compute Rosenbrock function
-    x1 = x[:, :-1]
-    x2 = x[:, 1:]
-    rosenbrock_value = tf.reduce_sum(b * (x2 - x1**2.0)**2.0 + (a - x1)**2.0, axis=1)
-    return rosenbrock_value
-
-def weierstrass(x, batch_size=128, num_dims=2, dtype=tf.float32, mode='train'):
-    """Weierstrass function problem: f(x)."""
-        
-    x = 0.005 * x
-    k = tf.range(start=0, limit=21, delta=1, dtype=tf.float32)
-    k = tf.expand_dims(tf.expand_dims(k, 0), 0)
-    ak = 0.5**k
-    bk = tf.constant(np.pi) * (3**k)
-
-    # Different settings for training and testing
-    if mode=='test':
-        # Compute Weierstrass function
-        kcs = ak * tf.cos(2*(tf.expand_dims(x, -1) + 0.5)*bk)  # shape (M, nx, 21)
-    else:
-        # In training mode, 'a' and 'b' are randomly initialized
-        ak = tf.random_uniform([batch_size, 1, 21], minval=0, maxval=1, dtype=dtype)
-        bk = tf.random_uniform([batch_size, 1, 21], minval=np.pi, maxval=3*np.pi, dtype=dtype)
-        kcs = ak * tf.cos(2*(tf.expand_dims(x, -1) + tf.random.uniform([batch_size, num_dims, 1], minval=0, maxval=1, dtype=dtype))*bk)
-
-    ksm = tf.reduce_sum(kcs, axis=2)
-    sm = tf.reduce_sum(ksm, axis=1)
-
-    kcs = ak * tf.cos(bk)
-    ksm = tf.reduce_sum(kcs)
-
-    return sm - tf.cast(tf.shape(x)[1], tf.float32)*ksm
-
-def smoothed_weierstrass_tf(x, a=0.5, b=3, N=50, sigma=0.5):
-    total = tf.constant(0.0, dtype=tf.float32)
-    for n in range(N):
-        total += a**n * tf.cos(b**n * 3.1415926 * x)
-    return total * tf.exp(-sigma**2 * x**2)
-
-def weierstrass_smoothed(batch_size=128, num_dims=None, stddev=0.01, dtype=tf.float32, mode='train'):
-    print(num_dims)
-
-    """Builds loss graph."""
-
-    # Trainable variable.
-    if mode=='test':
-        # x = tf.get_variable(
-        #     "x",
-        #     shape=[batch_size, num_dims],
-        #     dtype=dtype,
-        #     initializer=tf.random_uniform_initializer(-3, 3))
-        return tf.reduce_sum(smoothed_weierstrass_tf(x))
-
-    # x = tf.get_variable(
-    #     "x",
-    #     shape=[batch_size, num_dims],
-    #     dtype=dtype,
-    #     initializer=tf.random_uniform_initializer(-3, 3))
-
-    # Non-trainable variables.
-    w = tf.get_variable("w",
-                        dtype=dtype,
-                        initializer=indentity_init(batch_size, num_dims, stddev/num_dims),
-                        trainable=False)
-
-    y = tf.get_variable("y",
-                        shape=[batch_size, num_dims],
-                        dtype=dtype,
-                        initializer=tf.random_normal_initializer(stddev=stddev/num_dims),
-                        trainable=False)
-
     product = tf.squeeze(tf.matmul(w, tf.expand_dims(x, -1)))
-
-    weierstrass_terms = tf.reduce_sum(smoothed_weierstrass_tf(x), 1)
-
-    return tf.reduce_sum((product - y) ** 2, 1) - tf.reduce_mean(weierstrass_terms)
-
-
-def ackley(x, batch_size=128, num_dims=10, dtype=tf.float32, mode='train'):
-    """Ackley problem with varying parameters for training."""
-    
-    def ackley_tf(x, a, b, c):
-        smsq = tf.reduce_sum(tf.square(x), axis=1, keepdims=True)
-        smcs = tf.reduce_sum(tf.cos(c * x), axis=1, keepdims=True)
-        inx = 1.0 / tf.cast(tf.shape(x)[1], dtype)
-        term1 = -a * tf.exp(-b * tf.sqrt(inx * smsq))
-        term2 = -tf.exp(inx * smcs)
-        return tf.squeeze(term1 + term2 + a + tf.constant(np.e, dtype=dtype))
-    
-
-    # """Builds loss graph."""
-    # x = tf.get_variable(
-    #     "x",
-    #     shape=[batch_size, num_dims],
-    #     dtype=dtype,
-    #     initializer=tf.random_normal_initializer(stddev=0.01))
-    
-    if mode == 'test':
-        # Fixed parameters for testing
-        a = tf.constant(20.0, shape=[batch_size, 1], dtype=dtype)
-        b = tf.constant(0.2, shape=[batch_size, 1], dtype=dtype)
-        c = tf.constant(2.0 * np.pi, shape=[batch_size, 1], dtype=dtype)
-    else:
-        # Random parameters for training
-        a = tf.random_uniform([batch_size, 1], minval=18, maxval=22, dtype=dtype)
-        b = tf.random_uniform([batch_size, 1], minval=0.18, maxval=0.22, dtype=dtype)
-        c = tf.random_uniform([batch_size, 1], minval=2.0*np.pi-0.1, maxval=2.0*np.pi+0.1, dtype=dtype)
-
-    # Compute Ackley function
-    ackley_value = ackley_tf(x, a, b, c)
-    
-    return ackley_value
+    return (tf.reduce_sum((product - y) ** 2, 1))
 
 
 
@@ -316,7 +161,7 @@ if __name__ == '__main__':
     pop_size = 7
     dim = 5
     n_iter = 250
-    n_epochs = 100
+    n_epochs = 30
     x_val = tf.get_variable("x",shape=[pop_size,dim],dtype=np.float32,initializer=tf.random_uniform_initializer(-3, 3))
     # w = tf.get_variable("w",dtype=np.float32,initializer=problems.indentity_init(1, 2, 0.01/2),trainable=False)
     w = tf.get_variable("w",

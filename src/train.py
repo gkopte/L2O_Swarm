@@ -8,19 +8,45 @@ import os
 import pickle
 from six.moves import xrange
 import tensorflow as tf
+# tf.enable_eager_execution()
 import numpy as np
-from tensorflow.contrib.learn.python.learn import monitored_session as ms
-from tensorflow.python import debug as tf_debug
 
 import meta
 import util
 import pdb
 
+from tensorflow.contrib.learn.python.learn import monitored_session as ms
+from tensorflow.python import debug as tf_debug
+import mlflow
+import mlflow.tensorflow
+from mlflow.tracking import MlflowClient
+
+client = MlflowClient()
+
+experiment_name = "IECON2023_train"
+
+# Get the experiment by name
+experiment = client.get_experiment_by_name(experiment_name)
+
+# If the experiment exists and is deleted, restore it
+if experiment and experiment.lifecycle_stage == "deleted":
+    client.restore_experiment(experiment.experiment_id)
+
+# Set the restored experiment as the active experiment
+mlflow.set_experiment(experiment_name)
+
+
+
+mlflow.start_run()
+
+
 flags = tf.flags
 logging = tf.logging
+debug_mode = False
 
 
 FLAGS = flags.FLAGS
+flags.DEFINE_string("pre_trained_path", None, "Path for pre trained meta-optimizer.")
 flags.DEFINE_string("save_path", None, "Path for saved meta-optimizer.")
 flags.DEFINE_integer("num_epochs", 1000, "Number of training epochs.")
 flags.DEFINE_integer("log_period", 100, "Log period.")
@@ -33,12 +59,37 @@ flags.DEFINE_integer("num_steps", 100,
 flags.DEFINE_integer("unroll_length", 20, "Meta-optimizer unroll length.")
 flags.DEFINE_float("learning_rate", 0.001, "Learning rate.")
 flags.DEFINE_boolean("second_derivatives", False, "Use second derivatives.")
+flags.DEFINE_string("im_loss_option", "mse", "function used in the imitation learning loss")
+
+mlflow.set_tag("mlflow.runName", FLAGS.save_path)   
+mlflow.log_param("pre_trained_path", FLAGS.pre_trained_path)
+mlflow.log_param("save_path", FLAGS.save_path)
+mlflow.log_param("num_epochs", FLAGS.num_epochs)
+mlflow.log_param("log_period", FLAGS.log_period)
+mlflow.log_param("evaluation_period", FLAGS.evaluation_period)
+mlflow.log_param("evaluation_epochs", FLAGS.evaluation_epochs)
+mlflow.log_param("num_particle", FLAGS.num_particle)
+mlflow.log_param("problem", FLAGS.problem)
+mlflow.log_param("num_steps", FLAGS.num_steps)
+mlflow.log_param("unroll_length", FLAGS.unroll_length)
+mlflow.log_param("learning_rate", FLAGS.learning_rate)
+mlflow.log_param("second_derivatives", FLAGS.second_derivatives)
+mlflow.log_param("im_loss_option", FLAGS.im_loss_option)
+
 
 
 def main(_):
+
   # Configuration.
   num_unrolls = FLAGS.num_steps // FLAGS.unroll_length
-  problem, net_config, net_assignments = util.get_config(FLAGS.problem)
+
+  if FLAGS.pre_trained_path is None:
+    problem, net_config, net_assignments = util.get_config(FLAGS.problem)
+  else:
+    print('PRE TRAINED MODEL PATH: ', FLAGS.pre_trained_path)
+    problem, net_config, net_assignments = util.get_config(FLAGS.problem,
+                                                        FLAGS.pre_trained_path)
+    
   optimizer = meta.MetaOptimizer(FLAGS.problem, FLAGS.num_particle ,**net_config)
   if FLAGS.save_path is not None:
     if not os.path.exists(FLAGS.save_path):
@@ -57,6 +108,7 @@ def main(_):
   
   minimize = optimizer.meta_minimize(
               problem, FLAGS.unroll_length,
+              FLAGS.im_loss_option,
               learning_rate=FLAGS.learning_rate,
               net_assignments=net_assignments,
               model_path = path,
@@ -76,7 +128,8 @@ def main(_):
     total_cost = 0
     loss_record = []
     constants = []
-    pdb.set_trace()
+    if debug_mode:
+      pdb.set_trace()
     for e in xrange(FLAGS.num_epochs):
       # Training.
       time, cost, constant, Weights = util.run_epoch(sess, cost_op, [update, step], reset,
@@ -120,7 +173,25 @@ def main(_):
             pickle.dump(record, l_record)
           best_evaluation = eval_cost
 #    fc_weights = np.array(sess.run(fc_weights))
-    
+
+    try:
+      mlflow.log_artifact(FLAGS.path+'_log.txt')
+    except:
+      print("Training log not found")
+    try:
+      mlflow.log_artifact(FLAGS.path+'/cw.l2l')
+    except:
+      print("Model not found")
+    try:
+      mlflow.log_artifact(FLAGS.path+'/loss_record.pickle')
+    except:
+      print("Loss record not found")
+    try:
+      mlflow.log_artifact(FLAGS.path+'/evaluate_record.pickle')
+    except:
+      print("Evaluate record not found")
+      
+    mlflow.end_run()
 
 if __name__ == "__main__":
   tf.app.run()

@@ -90,8 +90,9 @@ def quadratic(batch_size=128, num_dims=10, stddev=0.01, dtype=tf.float32):
 def indentity_init(batch_size, num_dims, stddev):
   return tf.eye(num_dims, batch_shape=[batch_size])+\
   tf.random.normal(shape=[batch_size, num_dims, num_dims], stddev=stddev)
+
 def square_cos(batch_size=128, num_dims=None,  stddev=0.01, dtype=tf.float32, mode='train'):
-  #print (num_dims)
+  print (num_dims)
   def build():
     """Builds loss graph."""
 
@@ -100,7 +101,7 @@ def square_cos(batch_size=128, num_dims=None,  stddev=0.01, dtype=tf.float32, mo
       x = tf.get_variable(
         "x",
         shape=[batch_size, num_dims],
-        dtype=dtype, 
+        dtype=dtype,
         initializer=tf.random_uniform_initializer(-3, 3))
       return ( tf.reduce_sum(x*x - 10*tf.math.cos(2*3.1415926*x), 1)+ 10*num_dims )
 
@@ -135,13 +136,143 @@ def square_cos(batch_size=128, num_dims=None,  stddev=0.01, dtype=tf.float32, mo
 
     #product3 = tf.reduce_sum((product - y) ** 2, 1) - tf.reduce_sum(product2, 1) + 10*num_dims
 
-    
+
     return (tf.reduce_sum((product - y) ** 2, 1)) - tf.reduce_mean(product2) + 10*num_dims
 
   return build
 
+def rosenbrock(batch_size=128, num_dims=None, dtype=tf.float32, mode='train'):
+    def build():
+        """Builds loss graph."""
+        # Trainable variable.
+        x = tf.get_variable(
+            "x",
+            shape=[batch_size, num_dims],
+            dtype=dtype,
+            initializer=tf.random_uniform_initializer(-3, 3)
+        )
+
+        if mode=='test':
+            a = tf.get_variable("a",
+                    shape=[batch_size, num_dims-1],
+                    dtype=dtype,
+                    initializer=tf.ones_initializer(),
+                    trainable=False)
+
+            b = tf.get_variable("b",
+                    shape=[batch_size, num_dims-1],
+                    dtype=dtype,
+                    initializer=tf.constant_initializer(100),
+                    trainable=False)
+
+            x1 = x[:, :-1]
+            x2 = x[:, 1:]
+            # return tf.reduce_mean(b * (x2 - x1**2.0)**2.0 + (a - x1)**2.0)
+            return tf.reduce_sum(b * (x2 - x1**2.0)**2.0 + (a - x1)**2.0, axis=1)
+
+        # In training mode, 'a' and 'b' are randomly initialized
+        a = tf.get_variable("a",
+                            shape=[batch_size, num_dims-1],
+                            dtype=dtype,
+                            initializer=tf.random_uniform_initializer(-3, 3),
+                            trainable=False)
+
+        b = tf.get_variable("b",
+                            shape=[batch_size, num_dims-1],
+                            dtype=dtype,
+                            initializer=tf.random_uniform_initializer(80, 120),
+                            trainable=False)
+
+        # Compute Rosenbrock function
+        x1 = x[:, :-1]
+        x2 = x[:, 1:]
+        rosenbrock_value = tf.reduce_sum(b * (x2 - x1**2.0)**2.0 + (a - x1)**2.0, axis=1)
+
+        return rosenbrock_value
+
+    return build
+    
+import tensorflow as tf
+import numpy as np
+
+def weierstrass(batch_size=128, num_dims=10, dtype=tf.float32, mode='train'):
+    """Weierstrass function problem: f(x)."""
+
+    def build():
+        """Builds loss graph."""
+
+        # Trainable variable.
+        x = tf.get_variable(
+            "x",
+            shape=[batch_size, num_dims],
+            dtype=dtype,
+            initializer=tf.random_normal_initializer(0.0, 0.01))
+        
+        x = 0.005 * x
+        k = tf.range(start=0, limit=21, delta=1, dtype=tf.float32)
+        k = tf.expand_dims(tf.expand_dims(k, 0), 0)
+        ak = 0.5**k
+        bk = tf.constant(np.pi) * (3**k)
+
+        # Different settings for training and testing
+        if mode=='test':
+            # Compute Weierstrass function
+            kcs = ak * tf.cos(2*(tf.expand_dims(x, -1) + 0.5)*bk)  # shape (M, nx, 21)
+        else:
+            # In training mode, 'a' and 'b' are randomly initialized
+            ak = tf.random_uniform([batch_size, 1, 21], minval=0, maxval=1, dtype=dtype)
+            bk = tf.random_uniform([batch_size, 1, 21], minval=np.pi, maxval=3*np.pi, dtype=dtype)
+            kcs = ak * tf.cos(2*(tf.expand_dims(x, -1) + tf.random.uniform([batch_size, num_dims, 1], minval=0, maxval=1, dtype=dtype))*bk)
+
+        ksm = tf.reduce_sum(kcs, axis=2)
+        sm = tf.reduce_sum(ksm, axis=1)
+
+        kcs = ak * tf.cos(bk)
+        ksm = tf.reduce_sum(kcs)
+
+        return sm - tf.cast(tf.shape(x)[1], tf.float32)*ksm
+
+    return build
 
 
+def ackley(batch_size=128, num_dims=10, dtype=tf.float32, mode='train'):
+    """Ackley problem with varying parameters for training."""
+    
+    def ackley_tf(x, a, b, c):
+        smsq = tf.reduce_sum(tf.square(x), axis=1, keepdims=True)
+        smcs = tf.reduce_sum(tf.cos(c * x), axis=1, keepdims=True)
+        inx = 1.0 / tf.cast(tf.shape(x)[1], dtype)
+        term1 = -a * tf.exp(-b * tf.sqrt(inx * smsq))
+        term2 = -tf.exp(inx * smcs)
+        return tf.squeeze(term1 + term2 + a + tf.constant(np.e, dtype=dtype))
+    
+    def build():
+        """Builds loss graph."""
+        x = tf.get_variable(
+            "x",
+            shape=[batch_size, num_dims],
+            dtype=dtype,
+            initializer=tf.random_normal_initializer(stddev=0.01))
+        
+        if mode == 'test':
+            # Fixed parameters for testing
+            a = tf.constant(20.0, shape=[batch_size, 1], dtype=dtype)
+            b = tf.constant(0.2, shape=[batch_size, 1], dtype=dtype)
+            c = tf.constant(2.0 * np.pi, shape=[batch_size, 1], dtype=dtype)
+        else:
+            # Random parameters for training
+            a = tf.random_uniform([batch_size, 1], minval=18, maxval=22, dtype=dtype)
+            b = tf.random_uniform([batch_size, 1], minval=0.18, maxval=0.22, dtype=dtype)
+            c = tf.random_uniform([batch_size, 1], minval=2.0*np.pi-0.1, maxval=2.0*np.pi+0.1, dtype=dtype)
+
+        # Compute Ackley function
+        ackley_value = ackley_tf(x, a, b, c)
+        
+        return ackley_value
+
+    return build
+
+   
 def protein_dock(batch_size=128, num_dims=12, stddev=0.5, dtype=tf.float32):
   scoor_init, sq, se, sr, sbasis, seval = data_loader()  
   batch_size=125
